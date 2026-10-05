@@ -24,7 +24,7 @@ const fmtNum = n => {
 const shuffle = arr => { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
 const pick = (arr,n) => shuffle(arr).slice(0,n);
 const fmtDur = s => { const m=Math.floor(s/60), sec=s%60; return m>0?`${m}分${sec}秒`:`${sec}秒`; };
-const shortTitle = (v, n=38) => v.title.length > n ? v.title.slice(0, n) + '…' : v.title;
+const shortTitle = v => v.title.length > 38 ? v.title.slice(0, 38) + '…' : v.title;
 const byNo = no => videos.find(v => v.no === no);
 const addDays = (dateText, days) => {
   const [y, m, d] = dateText.split('-').map(Number);
@@ -119,14 +119,18 @@ for (const [key, label] of [
   choice('数据之最', 'easy', `怒九${label}最高的视频是哪一部？`, shortTitle(sorted[0]),
     videos.filter(v => v.bvid !== sorted[0].bvid).slice(0,30).map(v=>shortTitle(v)), `《${shortTitle(sorted[0])}》的${label}是 ${fmtNum(sorted[0][key])}。`);
 }
-choice('数据之最', 'medium', '哪一部视频的时长最长？', shortTitle(topBy('duration')[0]), topBy('duration').slice(1,10).map(shortTitle), `最长视频时长约 ${fmtDur(topBy('duration')[0].duration)}。`);
-choice('数据之最', 'medium', '哪一部视频的时长最短？', shortTitle(topBy('duration').reverse()[0]), topBy('duration').slice(0,10).map(shortTitle), `最短视频时长约 ${fmtDur(topBy('duration')[0].duration)}。`);
+const durationSorted = topBy('duration');
+const longestDurationVideo = durationSorted[0];
+const shortestDurationVideo = durationSorted[durationSorted.length - 1];
+choice('数据之最', 'medium', '哪一部视频的时长最长？', shortTitle(longestDurationVideo), durationSorted.slice(1,10).map(v=>shortTitle(v)), `最长视频时长约 ${fmtDur(longestDurationVideo.duration)}。`);
+choice('数据之最', 'medium', '哪一部视频的时长最短？', shortTitle(shortestDurationVideo), durationSorted.slice(-10,-1).reverse().map(v=>shortTitle(v)), `最短视频时长约 ${fmtDur(shortestDurationVideo.duration)}。`);
 add('数据之最', 'medium', '哪一部视频的字幕行数最多？', shortTitle(topBy('sub_lines')[0]), topBy('sub_lines').slice(1,10).map(shortTitle), `该视频共 ${fmtNum(topBy('sub_lines')[0].sub_lines)} 行字幕。`);
 add('数据之最', 'hard', '最长一次连续拖更间隔是多少天？', `${maxGap.gap_days}天`, [`${maxGap.gap_days+1}天`,`${maxGap.gap_days+3}天`,`${Math.max(1,maxGap.gap_days-3)}天`], `出现在《${shortTitle(maxGap)}》之前。`);
 add('数据之最', 'easy', '当前台账共收录多少部视频？', String(videos.length), [String(videos.length+10),String(videos.length-10),String(videos.length+50)], `主号 ${main.length} 部，小号 ${small.length} 部。`);
 add('数据之最', 'easy', '当前台账累计播放量约为多少？', fmtNum(Math.round(RAW.stats?.view/10000)*10000), [fmtNum(Math.round(RAW.stats?.view*0.9/10000)*10000),fmtNum(Math.round(RAW.stats?.view*1.1/10000)*10000),fmtNum(Math.round(RAW.stats?.view*0.5/10000)*10000)], `累计播放约 ${fmtNum(RAW.stats?.view)}。`);
 add('数据之最', 'medium', '怒九有多个视频播放量突破了 300 万？', ['约 30 个','约 15 个','约 50 个','约 10 个'], 0, `播放量 300 万以上的视频约有 ${videos.filter(v=>v.view>=3000000).length} 个。`);
-choice('数据之最', 'hard', '怒九播放量最低的视频属于哪个内容类型？', topBy('view').reverse()[0].type, topTypes.map(x=>x[0]).filter(t=>t!==topBy('view').reverse()[0].type), `该视频类型是 ${topBy('view').reverse()[0].type}。`);
+const lowestViewVideo = topBy('view')[topBy('view').length - 1];
+choice('数据之最', 'hard', '怒九播放量最低的视频属于哪个内容类型？', lowestViewVideo.type, topTypes.map(x=>x[0]).filter(t=>t!==lowestViewVideo.type), `该视频类型是 ${lowestViewVideo.type}。`);
 choice('数据之最', 'medium', '怒九总投币数大约是多少？', fmtNum(Math.round(RAW.stats?.coin/10000)*10000), [fmtNum(Math.round(RAW.stats?.coin*0.5/10000)*10000),fmtNum(Math.round(RAW.stats?.coin*2/10000)*10000),fmtNum(Math.round(RAW.stats?.coin*0.1/10000)*10000)], `总投币数约 ${fmtNum(RAW.stats?.coin)}。`);
 choice('数据之最', 'medium', '怒九总收藏数大约是多少？', fmtNum(Math.round(RAW.stats?.favorite/10000)*10000), [fmtNum(Math.round(RAW.stats?.favorite*0.5/10000)*10000),fmtNum(Math.round(RAW.stats?.favorite*2/10000)*10000),fmtNum(Math.round(RAW.stats?.favorite*0.1/10000)*10000)], `总收藏数约 ${fmtNum(RAW.stats?.favorite)}。`);
 choice('数据之最', 'hard', '怒九总分享数大约是多少？', fmtNum(Math.round(RAW.stats?.share/10000)*10000), [fmtNum(Math.round(RAW.stats?.share*0.5/10000)*10000),fmtNum(Math.round(RAW.stats?.share*2/10000)*10000),fmtNum(Math.round(RAW.stats?.share*0.1/10000)*10000)], `总分享数约 ${fmtNum(RAW.stats?.share)}。`);
@@ -1116,12 +1120,330 @@ addTrueFalse('真假判断', 'easy', '怒九的总点赞数超过了 1000 万。
   }
 }
 
+// ═══ 高质量批量扩充：仅使用当前台账已有字段推导 ═══
+{
+  const metricLabels = {
+    view: '播放量', like: '点赞数', danmaku: '弹幕数', coin: '投币数',
+    favorite: '收藏数', share: '分享数', reply: '评论数',
+    duration: '时长', sub_lines: '字幕行数', sub_chars: '字幕字符数', intro_count: '简介字数',
+  };
+  const metricDifficulty = metric => ['view', 'like', 'danmaku'].includes(metric) ? 'medium' : 'hard';
+  const nearTitleWrongs = (correct, pool, metric = 'view') => {
+    const seen = new Set([shortTitle(correct)]);
+    const wrongs = [];
+    for (const v of pool.slice().sort((a, b) => (b[metric] || 0) - (a[metric] || 0))) {
+      if (v.bvid === correct.bvid) continue;
+      const title = shortTitle(v);
+      if (seen.has(title)) continue;
+      seen.add(title);
+      wrongs.push(title);
+      if (wrongs.length === 3) break;
+    }
+    return wrongs;
+  };
+
+  // 每年 × 每个核心互动指标：年份内的真实冠军。
+  for (let year = 2018; year <= 2026; year++) {
+    const pool = videos.filter(v => v.date.startsWith(String(year)));
+    if (pool.length < 4) continue;
+    for (const [metric, label] of Object.entries(metricLabels).slice(0, 6)) {
+      const sorted = pool.slice().sort((a, b) => (b[metric] || 0) - (a[metric] || 0));
+      const correct = sorted[0];
+      if (!correct || !(correct[metric] > 0)) continue;
+      const wrongs = nearTitleWrongs(correct, pool, metric);
+      if (wrongs.length < 3) continue;
+      add('数据之最', metricDifficulty(metric),
+        `在 ${year} 年发布的视频里，${label}最高的是哪一部？`,
+        [shortTitle(correct), ...wrongs], 0,
+        `《${shortTitle(correct)}》发布于 ${correct.date}，${label}为 ${fmtNum(correct[metric])}。`);
+    }
+  }
+
+  // 全库指标榜：播放、互动、文本规模都拆成排名题。
+  for (const [metric, label] of Object.entries(metricLabels)) {
+    const sorted = topBy(metric).filter(v => (v[metric] || 0) > 0);
+    for (let i = 0; i < Math.min(12, sorted.length); i++) {
+      const correct = sorted[i];
+      const wrongs = nearTitleWrongs(correct, sorted.slice(i + 1), metric);
+      if (wrongs.length < 3) continue;
+      add('数据之最', i < 3 ? 'medium' : metricDifficulty(metric),
+        `怒九${label}第 ${i + 1} 高的视频是哪一部？`,
+        [shortTitle(correct), ...wrongs], 0,
+        `《${shortTitle(correct)}》的${label}为 ${fmtNum(correct[metric])}，发布于 ${correct.date}。`);
+    }
+  }
+
+  // 内容类型内部的记录与时间线。
+  const typeRecords = videos.reduce((acc, v) => {
+    if (!v.type) return acc;
+    (acc[v.type] ||= []).push(v);
+    return acc;
+  }, {});
+  for (const [type, pool] of Object.entries(typeRecords)) {
+    if (pool.length < 4) continue;
+    for (const metric of ['view', 'like', 'danmaku']) {
+      const correct = pool.slice().sort((a, b) => (b[metric] || 0) - (a[metric] || 0))[0];
+      const wrongs = nearTitleWrongs(correct, pool, metric);
+      if (wrongs.length < 3) continue;
+      add('视频内容', metricDifficulty(metric),
+        `“${type}”类视频中${metricLabels[metric]}最高的是哪一部？`,
+        [shortTitle(correct), ...wrongs], 0,
+        `《${shortTitle(correct)}》的${metricLabels[metric]}为 ${fmtNum(correct[metric])}。`);
+    }
+    const earliest = pool.slice().sort((a, b) => a.date.localeCompare(b.date))[0];
+    const latest = pool.slice().sort((a, b) => b.date.localeCompare(a.date))[0];
+    const longest = pool.slice().sort((a, b) => (b.duration || 0) - (a.duration || 0))[0];
+    const shortest = pool.slice().sort((a, b) => (a.duration || 0) - (b.duration || 0))[0];
+    [
+      ['最早', earliest], ['最新', latest], ['最长', longest], ['最短', shortest],
+    ].forEach(([label, video]) => {
+      if (!video) return;
+      const wrongs = nearTitleWrongs(video, pool.filter(v => v.bvid !== video.bvid), label === '最长' ? 'duration' : 'view');
+      if (wrongs.length < 3) return;
+      const detail = label === '最早' || label === '最新'
+        ? `发布日期是 ${video.date}。`
+        : `时长约 ${fmtDur(video.duration)}。`;
+      add(label === '最早' || label === '最新' ? '考古与里程碑' : '视频内容', 'medium',
+        `“${type}”类中${label}的视频是哪一部？`,
+        [shortTitle(video), ...wrongs], 0,
+        `《${shortTitle(video)}》${detail}`);
+    });
+  }
+
+  // 两个账号各自的互动冠军，避免只用总量比较。
+  for (const accountShort of ['主号', '小号']) {
+    const pool = videos.filter(v => v.account_short === accountShort);
+    const accountName = accountShort === '主号' ? '主号（怒九笑）' : '小号（怒九摸鱼馆）';
+    for (const [metric, label] of Object.entries(metricLabels).slice(0, 9)) {
+      const sorted = pool.slice().sort((a, b) => (b[metric] || 0) - (a[metric] || 0)).filter(v => (v[metric] || 0) > 0);
+      const correct = sorted[0];
+      if (!correct) continue;
+      const wrongs = nearTitleWrongs(correct, sorted.slice(1), metric);
+      if (wrongs.length < 3) continue;
+      add('深度对比', metricDifficulty(metric),
+        `在 ${accountName} 的收录视频里，${label}最高的是哪一部？`,
+        [shortTitle(correct), ...wrongs], 0,
+        `《${shortTitle(correct)}》的${label}为 ${fmtNum(correct[metric])}。`);
+    }
+  }
+
+  // 年度里程碑：每年首末投稿与各类型首作。
+  for (const year of Object.keys(yearCounter).sort()) {
+    const pool = videos.filter(v => v.date.startsWith(year));
+    if (pool.length < 3) continue;
+    const first = pool.slice().sort((a, b) => a.date.localeCompare(b.date))[0];
+    const last = pool.slice().sort((a, b) => b.date.localeCompare(a.date))[0];
+    [
+      ['最早', first], ['最晚', last],
+    ].forEach(([label, video]) => {
+      const wrongs = nearTitleWrongs(video, pool.filter(v => v.bvid !== video.bvid), 'view');
+      if (wrongs.length < 3) return;
+      add('考古与里程碑', 'medium',
+        `${year} 年${label}发布的收录视频是哪一部？`,
+        [shortTitle(video), ...wrongs], 0,
+        `《${shortTitle(video)}》发布于 ${video.date}。`);
+    });
+  }
+  for (const [type, pool] of Object.entries(typeRecords)) {
+    if (pool.length < 4) continue;
+    const earliest = pool.slice().sort((a, b) => a.date.localeCompare(b.date))[0];
+    const wrongs = nearTitleWrongs(earliest, pool.filter(v => v.bvid !== earliest.bvid), 'view');
+    if (wrongs.length >= 3) {
+      add('考古与里程碑', 'hard',
+        `在当前收录记录中，最早出现的“${type}”内容是哪一部？`,
+        [shortTitle(earliest), ...wrongs], 0,
+        `《${shortTitle(earliest)}》发布于 ${earliest.date}。`);
+    }
+  }
+
+  // 标签热度和相邻位次：全部从视频 tags 数组聚合。
+  for (const [tag, count] of topTags.slice(0, 25)) {
+    const wrongs = topTags.filter(([name]) => name !== tag).slice(0, 18).map(([name]) => name);
+    if (wrongs.length < 3) continue;
+    add('标签与分类', count > 50 ? 'easy' : 'hard',
+      `“${tag}”标签在当前台账中出现了多少次？`,
+      String(count), wrongs,
+      `“${tag}”共出现 ${count} 次。`);
+  }
+  for (let i = 0; i < Math.min(24, topTags.length - 1); i++) {
+    const [a, ac] = topTags[i];
+    const [b, bc] = topTags[i + 1];
+    if (!ac || !bc || ac === bc) continue;
+    add('标签与分类', 'medium',
+      `在当前标签统计里，“${a}”和“${b}”哪一个是更常用的标签？`,
+      [a, b, '两者一样', '无法比较'], ac > bc ? 0 : 1,
+      `“${a}”出现 ${ac} 次，“${b}”出现 ${bc} 次。`);
+  }
+
+  // 弹幕名梗：热度、精确次数和相邻位次。
+  const topMemeRows = (RAW.top_memes || []).filter(m => m.content);
+  for (let i = 0; i < Math.min(20, topMemeRows.length); i++) {
+    const meme = topMemeRows[i];
+    const wrongs = topMemeRows.filter(m => m.content !== meme.content).slice(0, 18).map(m => m.content);
+    if (wrongs.length < 3) continue;
+    add('梗与弹幕', i < 5 ? 'easy' : 'hard',
+      `弹幕名梗榜第 ${i + 1} 位是什么？`,
+      meme.content, wrongs,
+      `“${meme.content}”共出现 ${fmtNum(meme.count)} 次。`);
+  }
+  for (let i = 0; i < Math.min(18, topMemeRows.length - 1); i++) {
+    const a = topMemeRows[i];
+    const b = topMemeRows[i + 1];
+    if (!a.count || !b.count || a.count === b.count) continue;
+    add('梗与弹幕', 'medium',
+      `在当前弹幕总榜里，“${a.content}”和“${b.content}”哪一个出现次数更多？`,
+      [a.content, b.content, '两者一样', '无法比较'], a.count > b.count ? 0 : 1,
+      `“${a.content}”出现 ${fmtNum(a.count)} 次，“${b.content}”出现 ${fmtNum(b.count)} 次。`);
+  }
+  for (let i = 0; i < Math.min(12, topMemeRows.length); i++) {
+    const meme = topMemeRows[i];
+    const wrongs = topMemeRows.filter(m => m.content !== meme.content).slice(0, 12).map(m => m.content);
+    if (wrongs.length < 3) continue;
+    add('梗与弹幕', 'medium',
+      `“${meme.content}”这条弹幕大约出现了多少次？`,
+      fmtNum(meme.count), wrongs.map((_, index) => fmtNum(Math.max(1, Math.round(meme.count * [0.55, 1.35, 1.8][index % 3])))),
+      `当前台账聚合到 ${fmtNum(meme.count)} 次。`);
+  }
+
+  // 弹幕峰值：问峰值位置，而不是只问总弹幕量。
+  const peakVideos = videos
+    .map(v => ({ v, peak: (v.peaks || []).slice().sort((a, b) => b.count - a.count)[0] }))
+    .filter(row => row.peak && row.peak.count > 20)
+    .sort((a, b) => b.peak.count - a.peak.count)
+    .slice(0, 25);
+  for (const { v, peak } of peakVideos) {
+    const wrongTimes = (v.peaks || []).filter(p => p.t !== peak.t && Number.isFinite(p.t)).slice(0, 12).map(p => `${p.t} 秒`);
+    if (wrongTimes.length < 3) continue;
+    add('考古与里程碑', 'hard',
+      `《${shortTitle(v)}》里弹幕最密集的片段大约从几秒开始？`,
+      `${peak.t} 秒`, wrongTimes,
+      `按分秒弹幕统计，${peak.t} 秒处最高峰约 ${fmtNum(peak.count)} 条。`);
+  }
+
+  // 热门视频三件套：账号、类型、年份。
+  const hotVideos = topBy('view').slice(0, 80);
+  for (const v of hotVideos) {
+    const st = shortTitle(v);
+    const isMain = v.account_short === '主号';
+    add('视频内容', 'medium', `《${st}》发布在哪个账号？`,
+      isMain ? '主号（怒九笑）' : '小号（怒九摸鱼馆）',
+      isMain ? ['小号（怒九摸鱼馆）', '两个账号都发过', '没有收录'] : ['主号（怒九笑）', '两个账号都发过', '没有收录'],
+      `发布于 ${v.account}，日期 ${v.date}。`);
+    const typeWrongs = topTypes.map(([type]) => type).filter(type => type !== v.type).slice(0, 18);
+    if (typeWrongs.length >= 3) {
+      add('视频内容', 'easy', `《${st}》属于哪个内容类型？`,
+        v.type, typeWrongs,
+        `类型是 ${v.type}，发布于 ${v.date}。`);
+    }
+    const yearWrongs = Object.keys(yearCounter).filter(year => year !== v.date.slice(0, 4)).sort(() => Math.random() - 0.5).slice(0, 3).map(year => `${year}年`);
+    if (yearWrongs.length >= 3) {
+      add('视频内容', 'medium', `《${st}》发布于哪一年？`,
+        `${v.date.slice(0, 4)}年`, yearWrongs,
+        `准确日期是 ${v.date}。`);
+    }
+  }
+
+  // 合作专题：标题中带 warma/Warma 的真实合作记录。
+  const collabVideos = videos.filter(v => /warma/i.test(v.title)).sort((a, b) => (b.view || 0) - (a.view || 0)).slice(0, 40);
+  for (const v of collabVideos) {
+    const st = shortTitle(v);
+    const isMain = v.account_short === '主号';
+    add('合作专题', 'medium', `怒九和 Warma 合作的《${st}》发布在哪个账号？`,
+      isMain ? '主号（怒九笑）' : '小号（怒九摸鱼馆）',
+      isMain ? ['小号（怒九摸鱼馆）', '未在怒九账号发布', '两边都发布'] : ['主号（怒九笑）', '未在怒九账号发布', '两边都发布'],
+      `发布于 ${v.account}。`);
+    const typeWrongs = topTypes.map(([type]) => type).filter(type => type !== v.type).slice(0, 18);
+    if (typeWrongs.length >= 3) {
+      add('合作专题', 'medium', `怒九和 Warma 合作的《${st}》属于哪个内容类型？`,
+        v.type, typeWrongs,
+        `类型是 ${v.type}，发布于 ${v.date}。`);
+    }
+    const yearWrongs = Object.keys(yearCounter).filter(year => year !== v.date.slice(0, 4)).sort(() => Math.random() - 0.5).slice(0, 3).map(year => `${year}年`);
+    if (yearWrongs.length >= 3) {
+      add('合作专题', 'hard', `怒九和 Warma 合作的《${st}》发布于哪一年？`,
+        `${v.date.slice(0, 4)}年`, yearWrongs,
+        `准确日期是 ${v.date}。`);
+    }
+  }
+
+  // 字幕溯源：直接引用 merged 中的字幕语段。
+  const subtitlePool = videos.filter(v => (v.merged || []).length > 0 && (v.sub_lines || 0) > 0)
+    .sort((a, b) => (b.sub_lines || 0) - (a.sub_lines || 0))
+    .slice(0, 60);
+  for (const video of subtitlePool) {
+    const quote = (video.merged[0] || '').replace(/\s+/g, ' ').trim().slice(0, 55);
+    if (quote.length < 8) continue;
+    const wrongs = subtitlePool.filter(v => v.bvid !== video.bvid).map(shortTitle).slice(0, 30);
+    if (wrongs.length < 3) continue;
+    add('字幕探索', 'hard',
+      `“${quote}……”这段字幕最可能出自哪部视频？`,
+      shortTitle(video), wrongs,
+      `来自 ${video.date} 的《${shortTitle(video)}》。`);
+  }
+
+  // 评论溯源：每个样本视频中的最高赞评论作者与来源视频。
+  const commentSources = Object.entries(RAW_COMMENTS)
+    .map(([bvid, comments]) => ({ video: videos.find(v => v.bvid === bvid), comments: comments || [] }))
+    .filter(row => row.video && row.comments.length >= 4)
+    .sort((a, b) => (b.video.reply || 0) - (a.video.reply || 0))
+    .slice(0, 35);
+  for (const { video, comments } of commentSources) {
+    const sorted = comments.slice().sort((a, b) => (b.like || 0) - (a.like || 0));
+    const correct = sorted[0];
+    if (!correct?.name) continue;
+    const seen = new Set([correct.name]);
+    const authorWrongs = [];
+    for (const comment of sorted.slice(1)) {
+      if (comment.name && !seen.has(comment.name)) {
+        seen.add(comment.name);
+        authorWrongs.push(comment.name);
+      }
+      if (authorWrongs.length === 3) break;
+    }
+    if (authorWrongs.length < 3) continue;
+    add('评论区', 'hard',
+      `《${shortTitle(video)}》当前抓取样本中点赞最高的评论是谁发的？`,
+      correct.name, authorWrongs,
+      `评论来自 ${correct.name}，获赞 ${fmtNum(correct.like || 0)}。`);
+  }
+
+  // 冷知识：总览硬指标做成可校验判断题。
+  const statChecks = [
+    ['当前台账共收录 200 个视频。', videos.length === 200, `实际共收录 ${videos.length} 个。`],
+    ['当前台账共收录 205 个视频。', videos.length === 205, `实际共收录 ${videos.length} 个。`],
+    ['主号收录视频多于小号。', main.length > small.length, `主号 ${main.length} 个，小号 ${small.length} 个。`],
+    ['当前累计播放量超过 2.8 亿。', (RAW.stats?.view || 0) > 280000000, `累计播放 ${fmtNum(RAW.stats?.view)}。`],
+    ['当前累计点赞数超过 1690 万。', (RAW.stats?.like || 0) > 16900000, `累计点赞 ${fmtNum(RAW.stats?.like)}。`],
+    ['当前累计投币数超过 500 万。', (RAW.stats?.coin || 0) > 5000000, `累计投币 ${fmtNum(RAW.stats?.coin)}。`],
+    ['当前累计收藏数超过 574 万。', (RAW.stats?.favorite || 0) > 5740000, `累计收藏 ${fmtNum(RAW.stats?.favorite)}。`],
+    ['当前累计分享数超过 46 万。', (RAW.stats?.share || 0) > 460000, `累计分享 ${fmtNum(RAW.stats?.share)}。`],
+    ['当前累计评论/回复数超过 36 万。', (RAW.stats?.reply || 0) > 360000, `累计评论/回复 ${fmtNum(RAW.stats?.reply)}。`],
+    ['当前抓取到的弹幕原始记录超过 48 万条。', (RAW.stats?.danmaku_records || 0) > 480000, `弹幕原始记录约 ${fmtNum(RAW.stats?.danmaku_records)} 条。`],
+    ['当前有字幕数据的视频超过 79 部。', videos.filter(v => (v.sub_lines || 0) > 0).length > 79, `有字幕视频 ${videos.filter(v => (v.sub_lines || 0) > 0).length} 部。`],
+    ['“游戏实况”是数量最多的内容类型。', topTypes[0]?.[0] === '游戏实况', `最多的是“${topTypes[0]?.[0]}”，共 ${topTypes[0]?.[1]} 部。`],
+    ['“绘画/手书”是数量第二多的内容类型。', topTypes[1]?.[0] === '绘画/手书', `第二多的是“${topTypes[1]?.[0]}”，共 ${topTypes[1]?.[1]} 部。`],
+    ['两个账号的 B 站等级都是 6 级。', (mainProfile.level || 0) === 6 && (smallProfile.level || 0) === 6, `主号 ${mainProfile.level || 0} 级，小号 ${smallProfile.level || 0} 级。`],
+    ['主号和小号的合作邮箱一致。', mainProfile.sign?.includes('chickenfish@vip.qq.com') && smallProfile.sign?.includes('chickenfish@vip.qq.com'), '两个账号签名都写有合作邮箱。'],
+  ];
+  statChecks.forEach(([statement, isTrue, explanation]) => {
+    addTrueFalse('冷知识', 'medium', statement, Boolean(isTrue), explanation);
+  });
+}
+
 // ═══ Output ═══
+const finalQuestions = [];
+const seenQuestion = new Set();
+for (const question of questions) {
+  if (seenQuestion.has(question.q)) continue;
+  seenQuestion.add(question.q);
+  finalQuestions.push(question);
+}
+
 const output = {
-  version: 2,
-  total: questions.length,
-  categories: [...new Set(questions.map(q=>q.category))],
-  questions,
+  version: 3,
+  total: finalQuestions.length,
+  categories: [...new Set(finalQuestions.map(q=>q.category))],
+  questions: finalQuestions,
 };
 
 fs.writeFileSync(

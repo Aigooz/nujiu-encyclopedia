@@ -107,15 +107,15 @@ cookie = SESSDATA=xxx; buvid3=xxx
 | 热门评论缓存 | 12,194 |
 | Word 内嵌图表 | 18 |
 | Word 表格 | 257 |
-| 互动问答 | 434 |
+| 互动问答 | 1196 |
 
-最新 Word 百科是 `nujiu-encyclopedia-v5.docx`，Word 表格 257 张。正文包括概览、创作年表、类型分析、电台、生活/Vlog、游戏实况、音乐、绘画/手书、科普/配音、合作关系、熟悉度测试、小号专题、205 部视频词条和统计附录。
+最新 Word 百科是 `nujiu-encyclopedia-v6.docx`，Word 表格 257 张。正文包括概览、创作年表、类型分析、电台、生活/Vlog、游戏实况、音乐、绘画/手书、科普/配音、合作关系、熟悉度测试、小号专题、205 部视频词条、1196 道互动问答和统计附录。
 
 ## 成品
 
 | 文件 | 说明 |
 |---|---|
-| `nujiu-encyclopedia-v5.docx` | Word 百科 |
+| `nujiu-encyclopedia-v6.docx` | Word 百科 |
 | `site/index.html` | 交互式可视化网站 |
 | `@怒九笑 相关.xlsx` | 主号视频数据库（位于上级目录） |
 | `@怒九摸鱼馆 相关.xlsx` | 小号视频数据库（位于上级目录） |
