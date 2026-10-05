@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>怒九百科 · 可视化旗舰版</title>
+  <meta name="description" content="怒九视频字幕与百科数据可视化，包含投稿节奏、内容结构、规模增长与深度探索图表。">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="logo">N</div>
+        <span>怒九数据可视化</span>
+      </div>
+      <nav class="nav" id="nav">
+        <a href="#overview" class="active">总览</a>
+        <a href="#rhythm">节奏</a>
+        <a href="#sync">表格联动</a>
+        <a href="#insights">洞察</a>
+        <a href="#heat">热度</a>
+        <a href="#structure">结构</a>
+        <a href="#explore">探索</a>
+        <a href="#danmaku">弹幕考古</a>
+        <a href="#rank">榜单</a>
+        <a href="#quiz">答题</a>
+        <a href="#videos">全部视频</a>
+      </nav>
+      <button class="theme-btn" id="themeBtn">☀️ 浅色</button>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+    <div class="hero-inner">
+      <div class="eyebrow">🔥 <span id="docVersion">加载中</span> · 可视化旗舰版</div>
+      <h1>怒九百科<br><span class="grad">全景数据驾驶舱</span></h1>
+      <p>基于本地离线数据自动构建。一次筛选，联动刷新总览、节奏、结构、探索、榜单与视频明细。</p>
+      <div class="hero-actions">
+        <button class="btn" id="resetBtn">重置全部筛选</button>
+        <a class="btn ghost" href="#videos">进入视频明细</a>
+      </div>
+    </div>
+    <div class="hero-grid"></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat reveal"><div class="k">视频总数</div><div class="v c1" id="statVideos" data-countup>0</div><div class="s">当前筛选结果</div></div>
+    <div class="stat reveal"><div class="k">字幕行数</div><div class="v c2" id="statLines" data-countup>0</div><div class="s">已提取字幕规模</div></div>
+    <div class="stat reveal"><div class="k">总播放量</div><div class="v c3" id="statViews" data-countup>0</div><div class="s">B 站累计播放</div></div>
+    <div class="stat reveal"><div class="k">总点赞</div><div class="v c5" id="statLikes" data-countup>0</div><div class="s">B 站累计点赞</div></div>
+    <div class="stat reveal"><div class="k">字幕字符</div><div class="v c4" id="statChars" data-countup>0</div><div class="s">文本体量</div></div>
+    <div class="stat reveal"><div class="k">活跃年份</div><div class="v c6" id="statYears" data-countup>0</div><div class="s">首投到最新</div></div>
+    <div class="stat reveal"><div class="k">平均间隔</div><div class="v c2" id="statInterval">0 天</div><div class="s">相邻视频间隔</div></div>
+    <div class="stat reveal"><div class="k">最新视频</div><div class="v c6" id="statLast">—</div><div class="s" id="statLastTitle">—</div></div>
+  </div>
+
+  <main class="shell">
+    <section class="filters panel">
+      <div class="filters-row">
+        <div class="search-wrap">
+          <i>🔍</i>
+          <input id="q" type="search" placeholder="搜索标题、类型、账号或 BV 号……">
+        </div>
+        <select id="account"><option value="all">全部账号</option></select>
+        <select id="type"><option value="all">全部类型</option></select>
+        <select id="yearRange">
+          <option value="all">全部年份</option>
+          <option value="2020-2026">2020–2026</option>
+          <option value="2018-2022">2018–2022</option>
+          <option value="2016-2019">2016–2019</option>
+          <option value="last5y">最近 5 年</option>
+          <option value="last3y">最近 3 年</option>
+          <option value="last1y">最近 1 年</option>
+        </select>
+        <select id="sortField">
+          <option value="date-desc">默认时间 · 新→旧</option>
+          <option value="date-asc">默认时间 · 旧→新</option>
+          <option value="view-desc">播放量 · 最多</option>
+          <option value="like-desc">点赞 · 最多</option>
+          <option value="lines-desc">字幕行数 · 最多</option>
+          <option value="chars-desc">字符数 · 最多</option>
+          <option value="interval-desc">投稿间隔 · 最长</option>
+        </select>
+      </div>
+      <div class="chips" id="quickChips">
+        <button class="chip on" data-filter="all">全部 359</button>
+        <button class="chip" data-filter="game">游戏实况</button>
+        <button class="chip" data-filter="radio">电台</button>
+        <button class="chip" data-filter="music">音乐</button>
+        <button class="chip" data-filter="long">字幕 ≥ 1000 行</button>
+        <button class="chip" data-filter="big">字符 ≥ 10000</button>
+        <button class="chip" data-filter="main">主号</button>
+        <button class="chip" data-filter="small">小号</button>
+      </div>
+      <div class="slider">
+        <span class="mini">字幕行数下限</span>
+        <input class="range" id="minLines" type="range" min="0" max="2500" step="50" value="0">
+        <b id="minLinesLabel">0</b>
+      </div>
+    </section>
+
+    <section id="danmaku">
+      <div class="sec-head"><h2>弹幕考古</h2><p>百万条弹幕的年份活跃度与全站名梗（数据源：历史弹幕全量抓取）</p><div class="sec-line"></div></div>
+      <div class="grid">
+        <div class="card span6"><div class="card-head"><h3>弹幕年度活跃曲线</h3><p>哪一年大家在疯狂考古</p></div><div id="chartDanmakuYearly" class="chart tall"></div></div>
+        <div class="card span6"><div class="card-head"><h3>全站名梗榜</h3><p>弹幕重复次数 TOP 25 · 点击可搜索</p></div><div id="chartMemes" class="chart tall"></div></div>
+      </div>
+    </section>
+
+    <section id="sync">
+      <div class="sec-head"><h2>表格联动</h2><p>把两个 Excel 数据总表接入站点，检查同步完整度并可视化投稿间隔</p><div class="sec-line"></div></div>
+      <div class="sync-strip">
+        <div class="sync-card"><span class="k">表格记录</span><b id="syncRecords">—</b><span class="s">主号 + 小号</span></div>
+        <div class="sync-card"><span class="k">字段完整率</span><b id="syncCompleteness">—</b><span class="s">标题 / BV / 日期 / 类型 / 时长 / 来源</span></div>
+        <div class="sync-card"><span class="k">最长断更</span><b id="syncMaxGap">—</b><span class="s">同账号相邻投稿</span></div>
+        <div class="sync-card"><span class="k">平均间隔</span><b id="syncAvgGap">—</b><span class="s">表格时间序列</span></div>
+        <div class="sync-card"><span class="k">同步时间</span><b id="syncStamp">—</b><span class="s">site/data.js</span></div>
+      </div>
+      <div class="grid">
+        <div class="card span8"><div class="card-head"><h3>断更周期排行</h3><p>同账号相邻投稿间隔 TOP 20 · 点击打开视频</p></div><div id="chartGapRank" class="chart tall"></div></div>
+        <div class="card span4"><div class="card-head"><h3>间隔等级分布</h3><p>表格中的节奏分层规则</p></div><div id="chartGapBand" class="chart tall"></div></div>
+        <div class="card span4"><div class="card-head"><h3>账号同步摘要</h3><p>记录数、首投、最新投稿与最长间隔</p></div><div id="syncAccountTable" class="mini-table"></div></div>
+        <div class="card span4"><div class="card-head"><h3>类型 × 平均间隔</h3><p>哪些类型通常出现得更快</p></div><div id="chartTypeGap" class="chart tall"></div></div>
+        <div class="card span4"><div class="card-head"><h3>数据来源结构</h3><p>表格记录的抓取链路</p></div><div id="chartSource" class="chart tall"></div></div>
+      </div>
+    </section>
+
+    <section id="overview">
+      <div class="sec-head"><h2>总览</h2><p>规模、时间与类型的一级视角</p><div class="sec-line"></div></div>
+      <div class="grid">
+        <div class="card span8"><div class="card-head"><h3>年度投稿与累计增长</h3><p>柱形：年度视频；折线：累计视频</p></div><div id="chartAnnual" class="chart wide"></div></div>
+        <div class="card span4"><div class="card-head"><h3>账号分布</h3><p>主号与小号投稿占比</p></div><div id="chartAccount" class="chart wide"></div><div id="followerLine" class="mini" style="margin-top:10px"></div></div>
+        <div class="card span12"><div class="card-head"><h3>UP 主档案</h3><p>头像 · 签名 · 等级 · 粉丝数（数据源：B 站用户接口）</p></div><div id="profileCards" class="profile-grid"></div></div>
+        <div class="card span5"><div class="card-head"><h3>内容类型排行</h3><p>按筛选结果计数</p></div><div id="chartType" class="chart tall"></div></div>
+        <div class="card span7"><div class="card-head"><h3>字幕规模累积曲线</h3><p>累计字幕行与累计字符</p></div><div id="chartCumulative" class="chart tall"></div></div>
+        <div class="card span12"><div class="card-head"><h3>年度 × 类型堆叠矩阵</h3><p>观察内容结构如何随年份演变</p></div><div id="chartTypeStack" class="chart wide"></div></div>
+      </div>
+    </section>
+
+    <section id="rhythm">
+      <div class="sec-head"><h2>节奏</h2><p>什么时候更新、间隔多远、周几最勤</p><div class="sec-line"></div></div>
+      <div class="grid">
+        <div class="card span8"><div class="card-head"><h3>最近一年日历热力图</h3><p>当前筛选末段 365 天的投稿密度</p></div><div id="chartCalendar" class="chart" style="height:460px"></div></div>
+        <div class="card span4"><div class="card-head"><h3>月度分布</h3><p>1–12 月的投稿热度</p></div><div id="chartMonth" class="chart tall"></div></div>
+        <div class="card span4"><div class="card-head"><h3>星期分布</h3><p>周一到周日</p></div><div id="chartWeekday" class="chart tall"></div></div>
+        <div class="card span8"><div class="card-head"><h3>年度投稿间隔</h3><p>平均值与中位数</p></div><div id="chartInterval" class="chart tall"></div></div>
+      </div>
+    </section>
+
+    <section id="insights">
+      <div class="sec-head"><h2>深度洞察</h2><p>发布时钟、评论区生态、荣誉里程碑与时长策略分析</p><div class="sec-line"></div></div>
+      <div class="grid">
+        <div class="card span6"><div class="card-head"><h3>发布时钟</h3><p>哪个小时最常投稿（精确到分钟的发布时间）</p></div><div id="chartPubClock" class="chart tall"></div></div>
+        <div class="card span6"><div class="card-head"><h3>发布时段 × 星期矩阵</h3><p>颜色越深越密集</p></div><div id="chartPubWeekday" class="chart tall"></div></div>
+        <div class="card span6"><div class="card-head"><h3>评论年度趋势</h3><p>抓取到的评论按发表年份分布</p></div><div id="chartCommentYear" class="chart tall"></div></div>
+        <div class="card span6"><div class="card-head"><h3>评论活跃用户 TOP 15</h3><p>按抓取到的评论总赞数排序</p></div><div id="chartCommenterRank" class="chart tall"></div></div>
+        <div class="card span6"><div class="card-head"><h3>荣誉里程碑时间线</h3><p>全站排行榜 / 每周必看 / 热门收录</p></div><div id="chartHonorTimeline" class="chart tall"></div></div>
+        <div class="card span6"><div class="card-head"><h3>荣誉类型分布</h3><p>站内认可的证据链</p></div><div id="chartHonorType" class="chart tall"></div></div>
+        <div class="card span6"><div class="card-head"><h3>时长 × 点赞率</h3><p>不同时长区间的观众喜爱程度</p></div><div id="chartDurationInsight" class="chart tall"></div></div>
+        <div class="card span6"><div class="card-head"><h3>简介丰富度分析</h3><p>简介字数与播放量的关系</p></div><div id="chartDescInsight" class="chart tall"></div></div>
+      </div>
+    </section>
+
+    <section id="gallery">
+      <div class="sec-head"><h2>封面画廊</h2><p>359 个视频封面墙 · 点击查看详情（数据源：B 站视频接口）</p><div class="sec-line"></div></div>
+      <div class="gallery-filter panel" style="margin-bottom:16px">
+        <select id="galleryAccount"><option value="all">全部账号</option><option value="main">主号</option><option value="small">小号</option></select>
+        <select id="galleryYear"><option value="all">全部年份</option></select>
+        <span class="mini" id="galleryCount"></span>
+      </div>
+      <div class="cover-gallery" id="coverGallery"></div>
+      <button class="btn ghost" id="galleryMore" style="margin-top:16px;display:block;margin-left:auto;margin-right:auto">加载更多</button>
+    </section>
+
+    <section id="heat">
+      <div class="sec-head"><h2>热度</h2><p>播放、点赞、弹幕与互动率全景</p><div class="sec-line"></div></div>
+      <div class="grid">
+        <div class="card span8"><div class="card-head"><h3>TOP 15 · 播放量</h3><p>点击跳转 B 站</p></div><div id="chartTopViews" class="chart tall"></div></div>
+        <div class="card span4"><div class="card-head"><h3>互动构成</h3><p>点赞 / 投币 / 收藏 / 分享 / 评论 / 弹幕</p></div><div id="chartEngageMix" class="chart tall"></div></div>
+        <div class="card span12"><div class="card-head"><h3>播放量 × 点赞率散点</h3><p>横轴播放（对数），纵轴点赞率，点大小 = 弹幕量</p></div><div id="chartEngageScatter" class="chart tall"></div></div>
+        <div class="card span6"><div class="card-head"><h3>年度播放趋势</h3><p>按投稿年份汇总</p></div><div id="chartYearViews" class="chart tall"></div></div>
+        <div class="card span6"><div class="card-head"><h3>类型播放贡献</h3><p>按内容类型汇总</p></div><div id="chartTypeViews" class="chart tall"></div></div>
+      </div>
+    </section>
+
+    <section id="structure">
+      <div class="sec-head"><h2>结构</h2><p>内容树、类型组合与创作形态</p><div class="sec-line"></div></div>
+      <div class="grid">
+        <div class="card span5"><div class="card-head"><h3>Sunburst 内容树</h3><p>账号 → 类型 → 年代</p></div><div id="chartSunburst" class="chart tall"></div></div>
+        <div class="card span4"><div class="card-head"><h3>Treemap 主题面积</h3><p>面积代表视频数</p></div><div id="chartTreemap" class="chart tall"></div></div>
+        <div class="card span3"><div class="card-head"><h3>类型形态雷达</h3><p>前 5 类平均字幕行</p></div><div id="chartRadar" class="chart tall"></div></div>
+        <div class="card span12"><div class="card-head"><h3>账号 → 类型 → 年代流动</h3><p>Sankey 全链路</p></div><div id="chartSankey" class="chart wide"></div></div>
+      </div>
+    </section>
+
+    <section id="explore">
+      <div class="sec-head"><h2>深度探索</h2><p>规模散点、标题关键词与内容网络</p><div class="sec-line"></div></div>
+      <div class="grid">
+        <div class="card span8"><div class="card-head"><h3>投稿时间 × 字幕规模散点</h3><p>颜色为类型，大小为字符量</p></div><div id="chartScatter" class="chart tall"></div></div>
+        <div class="card span4"><div class="card-head"><h3>B 站标签关键词云</h3><p>从 B 站视频 tag 自动提取</p></div><div id="tagCloud" class="cloud"></div></div>
+        <div class="card span12"><div class="card-head">
+          <div><h3>标题关键词关系网络</h3><p>节点越大，出现越多；连线越粗，共现越强；可自由拖拽与缩放</p></div>
+          <button class="btn ghost" id="layoutBtn">重新布局</button>
+        </div><div id="chartGraph" class="chart wide"></div></div>
+        <div class="card span8"><div class="card-head"><h3>内容特征 K-Means 聚类</h3><p>PCA 降维展示 · 播放 / 互动 / 字幕 / 时长 10 维特征</p></div><div id="chartAlgorithmClusters" class="chart tall"></div></div>
+        <div class="card span4"><div class="card-head"><h3>相似内容检索</h3><p>TF-IDF + 余弦相似度 · 从当前筛选结果匹配</p></div>
+          <select id="similarSource" aria-label="选择基准视频"></select>
+          <div id="similarList" class="similarity-list"></div>
+        </div>
+        <div class="card span6"><div class="card-head"><h3>标签关联热力矩阵</h3><p>PMI 点互信息：越高代表越不是偶然共现</p></div><div id="chartTagAffinity" class="chart tall"></div></div>
+        <div class="card span6"><div class="card-head"><h3>标题关键词年度演化</h3><p>主题占比随时间的变化</p></div><div id="chartKeywordEvolution" class="chart tall"></div></div>
+      </div>
+    </section>
+
+    <section id="rank">
+      <div class="sec-head"><h2>榜单</h2><p>字幕量最大的重点内容</p><div class="sec-line"></div></div>
+      <div class="grid">
+        <div class="card span12"><div class="card-head"><h3>TOP 20 · 字幕行数</h3><p>点击图表或表格可跳转 B 站</p></div><div id="chartTop" class="chart wide"></div></div>
+      </div>
+    </section>
+
+    <section id="quiz">
+      <div class="sec-head"><h2>怒九百科问答</h2><p>你对怒九的了解有多少？来挑战一下！</p><div class="sec-line"></div></div>
+      <div class="quiz-wrap panel">
+        <div id="quizStart" class="quiz-screen">
+          <div class="quiz-intro">
+            <div class="quiz-icon">🎯</div>
+            <h3>怒九知识大挑战</h3>
+            <p>基于百科数据自动生成 · 涵盖数据之最、发布规律、名梗弹幕、字幕深度、评论区与冷知识</p>
+            <div class="quiz-stats-row">
+              <div class="quiz-stat"><b id="quizTotalQ">—</b><span>道题</span></div>
+              <div class="quiz-stat"><b id="quizTotalCat">—</b><span>个分类</span></div>
+              <div class="quiz-stat"><b>3</b><span>档难度</span></div>
+              <div class="quiz-stat"><b>2</b><span>种题型</span></div>
+            </div>
+            <div class="quiz-diff-select">
+              <button class="quiz-diff-btn active" data-diff="all">全部难度</button>
+              <button class="quiz-diff-btn" data-diff="easy">简单</button>
+              <button class="quiz-diff-btn" data-diff="medium">中等</button>
+              <button class="quiz-diff-btn" data-diff="hard">困难</button>
+            </div>
+            <div class="quiz-cat-select">
+              <button class="quiz-cat-btn active" data-cat="all">全部分类</button>
+            </div>
+            <button class="btn quiz-start-btn" id="quizStartBtn">开始答题</button>
+          </div>
+        </div>
+        <div id="quizGame" class="quiz-screen" style="display:none">
+          <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quizProgressFill"></div></div>
+          <div class="quiz-meta">
+            <span id="quizQNum">1 / 10</span>
+            <span class="quiz-badge" id="quizCategory">—</span>
+            <span class="quiz-badge diff" id="quizDiff">—</span>
+            <span class="quiz-badge format" id="quizFormat">—</span>
+            <span class="quiz-badge points" id="quizPoints">—</span>
+            <span id="quizScore" style="margin-left:auto">得分: <b>0</b></span>
+          </div>
+          <div class="quiz-question" id="quizQuestion">加载中…</div>
+          <div class="quiz-options" id="quizOptions"></div>
+          <div class="quiz-explain" id="quizExplain" style="display:none">
+            <div class="quiz-explain-icon">💡</div>
+            <div id="quizExplainText"></div>
+          </div>
+          <div class="quiz-actions" id="quizActions" style="display:none">
+            <button class="btn quiz-next-btn" id="quizNextBtn">下一题 →</button>
+          </div>
+        </div>
+        <div id="quizResult" class="quiz-screen" style="display:none">
+          <div class="quiz-result-inner">
+            <div class="quiz-result-icon" id="quizResultIcon">🎉</div>
+            <h3 id="quizResultTitle">答题完成！</h3>
+            <div class="quiz-result-score">
+              <span class="big" id="quizResultScore">0</span>
+              <span class="of">/ <span id="quizResultMax">0</span></span>
+            </div>
+            <div class="quiz-result-count">共 <span id="quizResultTotal">0</span> 题</div>
+            <div class="quiz-result-grade" id="quizResultGrade">—</div>
+            <div class="quiz-result-bar"><div class="quiz-result-fill" id="quizResultFill"></div></div>
+            <p class="quiz-result-msg" id="quizResultMsg"></p>
+            <div class="quiz-result-actions">
+              <button class="btn" id="quizRetryBtn">再来一次</button>
+              <button class="btn ghost" id="quizBackBtn">返回选择</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="videos">
+      <div class="sec-head"><h2>全部视频</h2><p>支持表头排序与分页浏览</p><div class="sec-line"></div></div>
+      <div class="panel">
+        <div class="table-tools">
+          <b id="tableCount">0 条</b>
+          <span class="mini">点击表头排序</span>
+          <span style="margin-left:auto" class="mini" id="pageInfo">1 / 1</span>
+          <button class="btn ghost" id="prevPage">上一页</button>
+          <button class="btn" id="nextPage">下一页</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+<th data-sort="no">#</th><th>封面</th><th data-sort="title">标题</th><th data-sort="date">日期</th><th data-sort="type">类型</th>
+<th data-sort="account">账号</th><th data-sort="sub_lines">字幕行</th><th data-sort="sub_chars">字符</th><th data-sort="view">播放</th><th data-sort="like">点赞</th><th data-sort="danmaku">弹幕</th><th data-sort="coin">投币</th><th data-sort="favorite">收藏</th><th>B站</th>
+            </tr></thead>
+            <tbody id="videoTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  <footer class="footer">本地离线站点 · 数据版本 <span id="footVersion"></span> · <a href="https://space.bilibili.com/14751040" target="_blank" rel="noreferrer">怒九主号</a></footer>
+  </main>
+  <button class="top-btn" id="topBtn" title="回到顶部">↑</button>
+  <div id="videoModal" class="modal-mask" hidden>
+    <div class="modal">
+      <button class="modal-close" id="modalClose">✕</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+    <div id="appLoader" style="position:fixed;inset:0;z-index:99998;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg,#0d0d14);gap:14px;">
+      <div style="width:36px;height:36px;border:3px solid rgba(124,92,255,.2);border-top-color:#7c5cff;border-radius:50%;animation:spin .8s linear infinite;"></div>
+      <div style="color:var(--text-muted,#8892b0);font-size:13px;">正在加载百科数据…</div>
+      <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+    </div>
+<script defer src="vendor/echarts.min.js?v=42"></script>
+<script defer src="data.js?v=42"></script>
+<script defer src="data-quiz.js?v=42"></script>
+<script defer src="app.js?v=42"></script>
+</body>
+</html>
+
+

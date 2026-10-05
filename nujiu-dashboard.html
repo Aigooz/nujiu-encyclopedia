@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>怒九百科数据仪表板</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<style>
+:root{--pink:#E8919C;--lav:#B39DDB;--blue:#82B1FF;--mint:#80CBC4;--amber:#FFD54F;--coral:#FF8A65;--purple:#CE93D8;--teal:#4DB6AC;--bg:#FAFAFC;--card:#FFF;--text:#37474F;--sub:#78909C}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:var(--bg);color:var(--text);padding:24px}
+.header{text-align:center;margin-bottom:28px}
+.header h1{font-size:28px;font-weight:700;color:var(--pink);margin-bottom:4px}
+.header p{font-size:14px;color:var(--sub)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:24px}
+.card{background:var(--card);border-radius:14px;padding:18px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.card .num{font-size:28px;font-weight:700}
+.card .label{font-size:13px;color:var(--sub);margin-top:4px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.grid-1{margin-bottom:20px}
+.panel{background:var(--card);border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.panel h3{font-size:15px;font-weight:600;margin-bottom:12px}
+.cw{position:relative;width:100%;height:300px}
+.cw.tall{height:400px}
+.cw.wide{height:220px}
+@media(max-width:768px){.grid-2{grid-template-columns:1fr}}
+.footer{text-align:center;margin-top:20px;font-size:12px;color:var(--sub)}
+.search{display:flex;justify-content:center;margin-bottom:16px}
+.search input{width:420px;max-width:92%;padding:10px 16px;border:2px solid var(--pink);border-radius:24px;font-size:14px;outline:none}
+.search input:focus{box-shadow:0 0 0 3px rgba(232,145,156,.18)}
+.results{max-width:800px;margin:0 auto 20px}
+.ri{background:#fff;border-radius:10px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,.05);cursor:pointer;transition:transform .15s}
+.ri:hover{transform:translateX(4px);box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.ri .no{min-width:44px;font-weight:700;color:var(--pink);font-size:14px}
+.ri .ti{flex:1;font-size:13px}
+.ri .mt{font-size:11px;color:var(--sub);min-width:140px;text-align:right}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;color:#fff}
+</style>
+</head>
+<body>
+    <div class="header"><h1>🎀 怒九百科数据仪表板</h1><p id="subtitle">加载中…</p></div>
+<div class="cards">
+<div class="card" style="color:var(--pink)"><div class="num" id="c-v">—</div><div class="label">总视频数</div></div>
+<div class="card" style="color:var(--lav)"><div class="num" id="c-l">—</div><div class="label">总字幕行数</div></div>
+<div class="card" style="color:var(--blue)"><div class="num" id="c-c">—</div><div class="label">总字幕字数</div></div>
+<div class="card" style="color:var(--teal)"><div class="num" id="c-d">—</div><div class="label">持续天数</div></div>
+<div class="card" style="color:#F9A825"><div class="num" id="c-a">—</div><div class="label">平均字幕行/部</div></div>
+</div>
+<div class="search"><input type="text" id="q" placeholder="🔍 搜索视频标题或编号…" oninput="doSearch(this.value)"></div>
+<div class="results" id="results"></div>
+<div class="grid-2">
+<div class="panel"><h3>📈 年度投稿趋势</h3><div class="cw"><canvas id="ch-year"></canvas></div></div>
+<div class="panel"><h3>🍩 视频类型分布</h3><div class="cw"><canvas id="ch-type"></canvas></div></div>
+</div>
+<div class="grid-2">
+<div class="panel"><h3>📱 账号分布</h3><div class="cw"><canvas id="ch-acct"></canvas></div></div>
+<div class="panel"><h3>📊 月度投稿分布（按年堆叠）</h3><div class="cw tall"><canvas id="ch-heat"></canvas></div></div>
+</div>
+<div class="grid-1 panel"><h3>📈 字幕累计增长（万字符）</h3><div class="cw"><canvas id="ch-growth"></canvas></div></div>
+<div class="grid-1 panel"><h3>⏱ 投稿间隔（天）</h3><div class="cw wide"><canvas id="ch-gaps"></canvas></div></div>
+    <div class="footer">Generated for Nujiu Encyclopedia | <span style="color:var(--pink)">♥</span></div>
+<script>
+let ALL=[];
+const COLORS=['#E8919C','#B39DDB','#82B1FF','#80CBC4','#FFD54F','#FF8A65','#CE93D8','#4DB6AC','#F48FB1','#81D4FA','#CFD8DC','#FFAB91','#A5D6A7','#90CAF9'];
+const MN=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+async function load(){
+  const r=await fetch('registry.json'); const d=await r.json(); ALL=d.videos; go();
+}
+function go(){
+  const V=ALL.filter(v=>v.date);
+  const tl=V.reduce((s,v)=>s+(v.sub_lines||0),0), tc=V.reduce((s,v)=>s+(v.sub_chars||0),0);
+  c_v.textContent=V.length; c_l.textContent=(tl/1e4).toFixed(1)+'万'; c_c.textContent=(tc/1e4).toFixed(1)+'万';
+  const d1=new Date(V[0].date), d2=new Date(V[V.length-1].date);
+  c_d.textContent=Math.round((d2-d1)/864e5).toLocaleString(); c_a.textContent=Math.round(tl/V.length);
+  subtitle.textContent=`${V[0].date} ~ ${V[V.length-1].date} | ${V.length} 部视频`;
+  Chart.defaults.font.family="'Microsoft YaHei',sans-serif"; Chart.defaults.color='#37474F';
+
+  // 年度
+  const yc={}; V.forEach(v=>{const y=v.date.slice(0,4); yc[y]=(yc[y]||0)+1});
+  const ys=Object.keys(yc).sort();
+  new Chart(chYear,{type:'bar',data:{labels:ys,datasets:[{data:ys.map(y=>yc[y]),backgroundColor:'#E8919C',borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#eee'}},x:{grid:{display:false}}}}});
+
+  // 类型
+  const tc2={}; V.forEach(v=>{const t=v.type||'其他'; tc2[t]=(tc2[t]||0)+1});
+  const te=Object.entries(tc2).sort((a,b)=>b[1]-a[1]);
+  new Chart(chType,{type:'doughnut',data:{labels:te.map(x=>x[0]),datasets:[{data:te.map(x=>x[1]),backgroundColor:COLORS,borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'right',labels:{boxWidth:12,font:{size:10}}}}}});
+
+  // 账号
+  const ac={}; V.forEach(v=>{const a=v.account||'?'; ac[a]=(ac[a]||0)+1});
+  const ae=Object.entries(ac).sort((a,b)=>b[1]-a[1]);
+  new Chart(chAcct,{type:'bar',data:{labels:ae.map(x=>x[0]),datasets:[{data:ae.map(x=>x[1]),backgroundColor:['#E8919C','#82B1FF','#80CBC4'],borderRadius:6}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,grid:{color:'#eee'}},y:{grid:{display:false}}}}});
+
+  // 月度堆叠条形图
+  const mc={}; V.forEach(v=>{const y=v.date.slice(0,4),m=parseInt(v.date.slice(5,7))-1; const k=`${y}|${m}`; mc[k]=(mc[k]||0)+1});
+  new Chart(chHeat,{type:'bar',data:{labels:MN,datasets:ys.map((y,yi)=>({
+    label:y,data:MN.map((_,mi)=>mc[`${y}|${mi}`]||0),backgroundColor:COLORS[yi%COLORS.length],borderRadius:2,stack:'s'
+  }))},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:true,position:'top',labels:{boxWidth:12,font:{size:10}}},tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${c.parsed.y}部`}}},
+    scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,beginAtZero:true,grid:{color:'#eee'},title:{display:true,text:'投稿数量'}}}}});
+
+  // 累计增长
+  const srt=[...V].sort((a,b)=>a.date.localeCompare(b.date));
+  let cum=0; const cp=srt.map(v=>{cum+=(v.sub_chars||0);return{x:v.date,y:cum/1e4}});
+  new Chart(chGrowth,{type:'line',data:{datasets:[{label:'累计字幕（万字符）',data:cp,borderColor:'#E8919C',backgroundColor:'rgba(232,145,156,.12)',fill:true,tension:.2,pointRadius:0,pointHitRadius:8}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',labels:{boxWidth:12}}},
+      scales:{x:{type:'time',time:{unit:'year'},grid:{display:false}},y:{beginAtZero:true,grid:{color:'#eee'}}}}});
+
+  // 间隔
+  const gp=[];
+  for(let i=1;i<srt.length;i++){const a=new Date(srt[i-1].date),b=new Date(srt[i].date);gp.push({x:srt[i].date,y:Math.round((b-a)/864e5)})}
+  new Chart(chGaps,{type:'scatter',data:{datasets:[
+    {label:'投稿间隔',data:gp,borderColor:'#CE93D8',backgroundColor:'rgba(206,147,216,.3)',pointRadius:2,pointHitRadius:6},
+    {type:'line',label:'7天',data:[{x:srt[0].date,y:7},{x:srt[srt.length-1].date,y:7}],borderColor:'#B39DDB',borderDash:[6,4],borderWidth:1,pointRadius:0},
+    {type:'line',label:'30天',data:[{x:srt[0].date,y:30},{x:srt[srt.length-1].date,y:30}],borderColor:'#FFD54F',borderDash:[6,4],borderWidth:1,pointRadius:0}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:true,position:'top',labels:{boxWidth:12}}},
+    scales:{x:{type:'time',time:{unit:'year'},grid:{display:false}},y:{beginAtZero:true,max:80,grid:{color:'#eee'},title:{display:true,text:'天'}}}}});
+}
+
+function doSearch(q){
+  const box=results;
+  if(!q||q.length<1){box.innerHTML='';return}
+  const lo=q.toLowerCase();
+  const hits=ALL.filter(v=>(v.title&&v.title.toLowerCase().includes(lo))||String(v.no)===q||(v.bvid&&v.bvid.toLowerCase().includes(lo))).slice(0,20);
+  if(!hits.length){box.innerHTML='<div style="text-align:center;color:#999;padding:16px">未找到匹配视频</div>';return}
+  box.innerHTML=hits.map(v=>`<div class="ri" onclick="window.open('https://www.bilibili.com/video/${v.bvid}','_blank')">
+    <div class="no">#${v.no}</div><div class="ti">${v.title}</div>
+    <div class="mt"><span class="badge" style="background:${v.account&&v.account.includes('小号')?'#82B1FF':'#E8919C'}">${v.type||'其他'}</span> ${v.date} | ${v.sub_lines||0}行</div></div>`).join('');
+}
+load();
+</script>
+</body>
+</html>

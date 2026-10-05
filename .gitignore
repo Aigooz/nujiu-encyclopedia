@@ -1,0 +1,55 @@
+﻿# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Node
+node_modules/
+
+# Temp/backup
+*.tmp
+~$*.xlsx
+backup_xlsx/
+
+# Dev/debug files
+tools/_*
+tools/artifact_tmp/
+*.bak
+
+# Large raw data (regenerable via tools)
+danmaku/
+
+# Old docx versions (keep only latest)
+warma-encyclopedia-v10.docx
+warma-encyclopedia-v11.docx
+warma-encyclopedia-v12.docx
+warma-encyclopedia-v13.docx
+warma-encyclopedia-v14.docx
+warma-encyclopedia-v15.docx
+
+# Sensitive credentials
+config.ini
+
+# Verify screenshots
+_verify_*.png
+output/pdf-check-v5/
+output/render-v4/
+
+# Git LFS internal
+*.lfs
+
+# Video/subtitle raw
+*.mp4
+*.mkv
+*.flv
+*.ass
+*.srt
+*.xml.gz
+~$*docx
