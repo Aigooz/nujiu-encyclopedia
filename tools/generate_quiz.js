@@ -40,14 +40,33 @@ const semanticDistractors = value => {
   if (!Number.isFinite(number)) return [];
   const scale = match[3] === '万' ? 10000 : match[3] === '亿' ? 100000000 : 1;
   const raw = number * scale;
-  const suffix = match[4] ? ` ${match[4]}` : '';
+  const displayScale = match[3] || (raw >= 1e8 ? '亿' : raw >= 1e4 ? '万' : '');
+  const unit = match[4] || '';
+  const spacer = displayScale && unit ? ' ' : '';
+  const formatLikeAnswer = value => {
+    if (displayScale === '亿') return `${(value / 1e8).toFixed(1)} 亿`;
+    if (displayScale === '万') return `${(value / 1e4).toFixed(1)} 万`;
+    return String(Math.round(value));
+  };
   const options = [0.75, 1.25, 1.5, 2, 0.5].map(factor =>
-    `${match[1] || ''}${fmtNum(Math.round(raw * factor))}${suffix}`
+    `${match[1] || ''}${formatLikeAnswer(raw * factor)}${spacer}${unit}`
   );
   if (raw < 10) {
     options.push(...[1, 2, 3, -1, 5, 7].map(delta => raw + delta).filter(n => n > 0).map(String));
   }
   return options;
+};
+const numericOptionInfo = value => {
+  const match = String(value).trim().match(
+    /^(约\s*|超过\s*|不到\s*)?[\d,.]+\s*(万|亿)?\s*(%|％|个|部|天|秒|分钟|次|行|字符|小时|人|倍|级|年)?$/
+  );
+  if (!match) return null;
+  return { qualifier: match[1] || '', scale: match[2] || '', unit: match[3] || '' };
+};
+const sameNumericForm = (a, b) => {
+  const left = numericOptionInfo(a);
+  const right = numericOptionInfo(b);
+  return Boolean(left && right && left.qualifier === right.qualifier && left.scale === right.scale && left.unit === right.unit);
 };
 
 // ─── Question Bank ───
@@ -74,7 +93,18 @@ const choice = (category, difficulty, q, correct, wrongPool, explanation) => {
 const choiceRaw = (category, difficulty, q, correct, wrongPool, explanation) => {
   const unique = [String(correct)];
   const seen = new Set(unique);
-  const candidates = [...wrongPool, ...semanticDistractors(correct)];
+  let candidates;
+  if (numericOptionInfo(correct)) {
+    candidates = [
+      ...wrongPool.filter(w => sameNumericForm(correct, w)),
+      ...semanticDistractors(correct),
+    ];
+  } else {
+    candidates = [
+      ...wrongPool.filter(w => !numericOptionInfo(w)),
+      ...semanticDistractors(correct),
+    ];
+  }
   for (const w of candidates) {
     const s = String(w);
     if (s && !seen.has(s)) { seen.add(s); unique.push(s); if (unique.length === 4) break; }
@@ -567,9 +597,9 @@ add('冷知识', 'medium', '怒九百科技巧台账的年限跨度大约是多�
     '标题提到"毫无节奏感"，说明这是一个节奏/音乐类游戏。');
 }
 {
-  add('视频内容', 'hard', '怒九的《【怒九/碳碳】伪人超市来了两个神人店员》中的"碳碳"是谁？',
-    ['捏碳', '碳基生物', '碳碳峡', '不知道'], 0,
-    '"碳碳"是捏碳（另一位 UP 主）的昵称。');
+  add('视频内容', 'hard', '《【怒九/碳碳】伪人超市来了两个神人店员》中的"碳碳"大号叫什么？',
+    ['捏碳碳碳碳', 'Warma', '怒九笑', '岚少'], 0,
+    '视频简介写明：嘉宾碳碳，大号是捏碳碳碳碳。');
 }
 {
   add('视频内容', 'medium', '《【warma/怒九】超市惊魂夜！！！》发布于哪一年？',
@@ -644,9 +674,9 @@ add('冷知识', 'medium', '怒九百科技巧台账的年限跨度大约是多�
     '小号"怒九摸鱼馆"的第一个视频发布于 2021 年。');
 }
 {
-  add('考古与里程碑', 'hard', '怒九和 Warma 第一次线下见面是在哪个视频中提到的？',
-    ['【怒九/warma】线下见面★ 宅人终于出去玩啦！！', '【warma/怒九】成都旅游短视频合集', '【warma/怒九】双影奇境', '【warma/怒九】让我快乐地搬家吧'], 0,
-    '标题《【怒九/warma】线下见面★ 宅人终于出去玩啦！！》记录了他们的线下见面。');
+  add('考古与里程碑', 'hard', '《【怒九/warma 】线下见面★ 宅人终于出去玩啦！！》最可能记录了哪次互动？',
+    ['怒九和 Warma 的线下见面', '两账号的线上连麦', '怒九的首次投稿', '小号的第一条动态'], 0,
+    '该视频是 2021-02-04 的主号投稿，简介称这是和沃玛的一期线下联动。');
 }
 {
   add('考古与里程碑', 'hard', '怒九的《2020 你还要我怎样？大学生现状。》属于什么类型？',
@@ -696,9 +726,9 @@ add('冷知识', 'medium', '怒九百科技巧台账的年限跨度大约是多�
     '发布于小号"怒九摸鱼馆"。');
 }
 {
-  add('合作专题', 'medium', '怒九和 Warma 合作过几个关于恐怖的游戏？',
-    ['超过 5 个', '1 个', '2 个', '3 个'], 0,
-    '两人合作过《绝对不许关灯！》《超市惊魂夜！！！》《尖叫就玩完的恐怖游戏！》《鬼打墙了！》等多部恐怖游戏。');
+  add('合作专题', 'hard', '在当前台账中，标题同时标注 Warma 和怒九，且标题或标签带“恐怖”的视频有几部？',
+    ['5 部', '3 部', '4 部', '7 部'], 0,
+    '分别是《让我们快乐地搬家吧！》《绝对阳光快乐的园丁模拟器》《来玩胆量测试吧！》《REANIMAL（生灵重塑）》和《Subnautica2：异星水域》。');
 }
 {
   add('合作专题', 'medium', '怒九和 Warma 合作过《您的外卖骑手掉沟里了》，这是什么类型？',
@@ -711,9 +741,9 @@ add('冷知识', 'medium', '怒九百科技巧台账的年限跨度大约是多�
     '这是两人在红色月亮下赏月聊天的日常视频。');
 }
 {
-  add('合作专题', 'medium', '怒九和 Warma 合作过的《拼到我算我输》系列总数大约是多少？',
-    ['超过 15 个', '5 个', '8 个', '3 个'], 0,
-    '"撩到我算我输"系列（含"拼到我我输了"）总数超过 15 个，是怒九最长系列之一。');
+  add('合作专题', 'hard', '在当前台账中，标题同时含有“撩到我”和“算我输”的视频有几部？',
+    ['16 部', '12 部', '14 部', '18 部'], 0,
+    '共 16 部，从 2019 年的《与大叔恋爱的游戏》到 2022 年的《与邪神恋爱吧》。');
 }
 {
   add('合作专题', 'hard', '《【Warma/怒九/捏碳】我们的新游戏发布？！》播放量约多少？',
@@ -1258,7 +1288,10 @@ addTrueFalse('真假判断', 'easy', '怒九的总点赞数超过了 1000 万。
 
   // 标签热度和相邻位次：全部从视频 tags 数组聚合。
   for (const [tag, count] of topTags.slice(0, 25)) {
-    const wrongs = topTags.filter(([name]) => name !== tag).slice(0, 18).map(([name]) => name);
+    const wrongs = topTags
+      .filter(([name, value]) => name !== tag && value !== count)
+      .slice(0, 18)
+      .map(([, value]) => String(value));
     if (wrongs.length < 3) continue;
     add('标签与分类', count > 50 ? 'easy' : 'hard',
       `“${tag}”标签在当前台账中出现了多少次？`,
@@ -1431,12 +1464,59 @@ addTrueFalse('真假判断', 'easy', '怒九的总点赞数超过了 1000 万。
 }
 
 // ═══ Output ═══
+const titleCandidates = new Set(videos.map(v => shortTitle(v)));
+const knownTypes = new Set(topTypes.map(([type]) => type));
+const invalidAnswerPlaceholders = new Set(['不知道', '未知', '无法判断', '没有']);
+const qualityIssue = question => {
+  if (!question.q || !Array.isArray(question.options) || !question.explanation) return 'shape';
+  const options = question.options.map(String);
+  if (question.format === 'mc') {
+    if (options.length !== 4 || new Set(options).size !== 4) return 'shape';
+    if (options.some(option => !option.trim())) return 'blank';
+    const correct = options[question.answer];
+    if (!correct?.trim()) return 'shape';
+    const stem = question.q;
+    if (/哪一年|发布于哪一年|发布在哪一年/.test(stem)) {
+      if (!options.every(option => /^(?:约\s*)?\d{4}(?:年)?$/.test(option.trim()))) return 'year-form';
+    }
+    if (/什么时候|哪一天|哪一月|发布于哪一天|发布于什么时候/.test(stem)) {
+      if (!options.every(option => /^\d{4}-\d{2}-\d{2}$/.test(option.trim()))) return 'date-form';
+    }
+    if (/属于哪个内容类型|属于哪个类型|属于什么内容类型|是什么内容类型/.test(stem)) {
+      if (!options.every(option => knownTypes.has(option))) return 'type-domain';
+    }
+    if (/哪个账号|发布在哪个账号/.test(stem)) {
+    if (!options.every(option => /主号|小号|两者完全一样|两者一样|完全一样|无法比较|两个账号都发过|两边都发布|两个都发了|都没发|没有收录|没有发过|未在怒九账号发布|Warma的账号/.test(option))) return 'account-domain';
+    }
+    if (/多少|几个|几部|几次|几条|几行|约是多少|大约是多少|多少倍/.test(stem) && !/哪一年|年份|什么时候|哪一天/.test(stem)) {
+      const info = numericOptionInfo(correct);
+      if (!info || !options.every(option => sameNumericForm(correct, option))) return 'numeric-form';
+      if (/%|％|率/.test(stem) && !options.every(option => /%|％/.test(option))) return 'percent-form';
+    }
+    if (/哪一部视频|哪个视频|出自哪部视频|哪一视频/.test(stem)) {
+      const recognizable = option => titleCandidates.has(option) || videos.some(v => v.title.includes(option.replace(/…$/, '')));
+      if (!options.every(recognizable)) return 'title-domain';
+    }
+    if (/是谁|谁发的|和谁|合作对象/.test(stem)) {
+      if (options.some(option => invalidAnswerPlaceholders.has(option))) return 'invalid-distractor';
+    }
+  }
+  return '';
+};
+
 const finalQuestions = [];
 const seenQuestion = new Set();
+const rejectedQuestions = [];
 for (const question of questions) {
+  const reason = qualityIssue(question);
+  if (reason) {
+    rejectedQuestions.push({ id: question.id, reason, question });
+    console.warn(`Quality gate rejected #${question.id} [${reason}]: ${question.q}`);
+    continue;
+  }
   if (seenQuestion.has(question.q)) continue;
   seenQuestion.add(question.q);
-  finalQuestions.push(question);
+  finalQuestions.push({ ...question, id: finalQuestions.length + 1 });
 }
 
 const output = {
@@ -1452,4 +1532,5 @@ fs.writeFileSync(
   'utf8',
 );
 console.log(`Generated ${output.total} questions across ${output.categories.length} categories`);
+console.log(`Quality gate rejected ${rejectedQuestions.length} questions`);
 console.log('Categories:', output.categories.join(', '));
