@@ -357,11 +357,11 @@ function renderCalendar(rows) {
     ...baseOption(),
     tooltip: { formatter: p => `${p.value[0]}<br>投稿 ${p.value[1]} 条` },
     visualMap: {
-      min: 0, max: Math.max(1, ...data.map(([, value]) => value)), calculable: true, orient: 'horizontal', left: 25, bottom: 15,
+      min: 0, max: Math.max(1, ...data.map(([, value]) => value)), calculable: true, orient: 'horizontal', left: 25, bottom: 10,
       inRange: { color: ['#1f2933', PALETTE[1], PALETTE[0], PALETTE[4]] }, textStyle: { color: cssVar('--muted') }
     },
     calendar: {
-      top: 70, left: 45, right: 35, cellSize: [15, 15], range, splitLine: { show: false },
+      top: 42, left: 45, right: 35, cellSize: ['auto', 12], range, splitLine: { show: false },
       itemStyle: { color: 'transparent', borderColor: cssVar('--line'), borderWidth: 1 },
       yearLabel: { show: true, color: cssVar('--text') }, monthLabel: { color: cssVar('--muted') },
       dayLabel: { firstDay: 1, nameMap: 'ZH', color: cssVar('--muted') }
@@ -1541,16 +1541,11 @@ function renderSync(rows) {
   }
 
   const sourceRows = countBy(state.rows, row => row.table_source || 'B站用户视频列表');
-  getChart('chartSource', {
-    ...baseOption(),
-    tooltip: { trigger: 'item', formatter: p => `${p.name}<br><b>${numberFormat(p.value)}</b> 条记录` },
-    legend: { bottom: 0, textStyle: { color: cssVar('--muted'), fontSize: 11 } },
-    series: [{
-      type: 'pie', radius: ['38%', '70%'], center: ['50%', '44%'], data: sourceRows.map(([name, value]) => ({ name, value })),
-      itemStyle: { borderColor: cssVar('--bg2'), borderWidth: 2 },
-      label: { color: cssVar('--text'), fontSize: 11, formatter: p => `${p.name}\n${p.percent}%` }
-    }]
-  });
+  const sourceTotal = sourceRows.reduce((total, [, value]) => total + value, 0);
+  document.getElementById('sourceStrip').innerHTML = sourceRows.map(([name, value]) => `
+    <div class="source-item" title="${esc(name)}：${numberFormat(value)} 条记录">
+      <span>${esc(name)}</span><b>${numberFormat(value)}</b><span class="mini">${sourceTotal ? (value / sourceTotal * 100).toFixed(1) : 0}%</span>
+    </div>`).join('');
 }
 
 function esc(s) {

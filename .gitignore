@@ -41,6 +41,7 @@ config.ini
 _verify_*.png
 output/pdf-check-v5/
 output/render-v4/
+output/audit/
 
 # Git LFS internal
 *.lfs

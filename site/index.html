@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>怒九百科 · 可视化旗舰版</title>
   <meta name="description" content="怒九视频字幕与百科数据可视化，包含投稿节奏、内容结构、规模增长与深度探索图表。">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=43">
 </head>
 <body>
   <header class="header">
@@ -104,8 +104,8 @@
     <section id="danmaku">
       <div class="sec-head"><h2>弹幕考古</h2><p>百万条弹幕的年份活跃度与全站名梗（数据源：历史弹幕全量抓取）</p><div class="sec-line"></div></div>
       <div class="grid">
-        <div class="card span6"><div class="card-head"><h3>弹幕年度活跃曲线</h3><p>哪一年大家在疯狂考古</p></div><div id="chartDanmakuYearly" class="chart tall"></div></div>
-        <div class="card span6"><div class="card-head"><h3>全站名梗榜</h3><p>弹幕重复次数 TOP 25 · 点击可搜索</p></div><div id="chartMemes" class="chart tall"></div></div>
+        <div class="card span5"><div class="card-head"><h3>弹幕年度活跃曲线</h3><p>哪一年大家在疯狂考古</p></div><div id="chartDanmakuYearly" class="chart tall"></div></div>
+        <div class="card span7"><div class="card-head"><h3>全站名梗榜</h3><p>弹幕重复次数 TOP 25 · 点击可搜索</p></div><div id="chartMemes" class="chart tall"></div></div>
       </div>
     </section>
 
@@ -119,11 +119,16 @@
         <div class="sync-card"><span class="k">同步时间</span><b id="syncStamp">—</b><span class="s">site/data.js</span></div>
       </div>
       <div class="grid">
-        <div class="card span8"><div class="card-head"><h3>断更周期排行</h3><p>同账号相邻投稿间隔 TOP 20 · 点击打开视频</p></div><div id="chartGapRank" class="chart tall"></div></div>
-        <div class="card span4"><div class="card-head"><h3>间隔等级分布</h3><p>表格中的节奏分层规则</p></div><div id="chartGapBand" class="chart tall"></div></div>
-        <div class="card span4"><div class="card-head"><h3>账号同步摘要</h3><p>记录数、首投、最新投稿与最长间隔</p></div><div id="syncAccountTable" class="mini-table"></div></div>
-        <div class="card span4"><div class="card-head"><h3>类型 × 平均间隔</h3><p>哪些类型通常出现得更快</p></div><div id="chartTypeGap" class="chart tall"></div></div>
-        <div class="card span4"><div class="card-head"><h3>数据来源结构</h3><p>表格记录的抓取链路</p></div><div id="chartSource" class="chart tall"></div></div>
+        <div class="card span8"><div class="card-head"><h3>断更周期排行</h3><p>同账号相邻投稿间隔 TOP 20 · 点击打开视频</p></div><div id="chartGapRank" class="chart xtall"></div></div>
+        <div class="stack span4">
+          <div class="card"><div class="card-head"><h3>间隔等级分布</h3><p>表格中的节奏分层规则</p></div><div id="chartGapBand" class="chart short"></div></div>
+          <div class="card"><div class="card-head"><h3>账号同步摘要</h3><p>记录数、首投、最新投稿与最长间隔</p></div><div id="syncAccountTable" class="mini-table"></div></div>
+        </div>
+        <div class="card span12"><div class="card-head"><h3>类型 × 平均间隔</h3><p>哪些类型通常出现得更快</p></div><div id="chartTypeGap" class="chart wide"></div></div>
+      </div>
+      <div class="source-strip">
+        <div class="source-title"><b>数据来源结构</b><span>表格记录的抓取链路</span></div>
+        <div class="source-items" id="sourceStrip"></div>
       </div>
     </section>
 
@@ -142,8 +147,8 @@
     <section id="rhythm">
       <div class="sec-head"><h2>节奏</h2><p>什么时候更新、间隔多远、周几最勤</p><div class="sec-line"></div></div>
       <div class="grid">
-        <div class="card span8"><div class="card-head"><h3>最近一年日历热力图</h3><p>当前筛选末段 365 天的投稿密度</p></div><div id="chartCalendar" class="chart" style="height:460px"></div></div>
-        <div class="card span4"><div class="card-head"><h3>月度分布</h3><p>1–12 月的投稿热度</p></div><div id="chartMonth" class="chart tall"></div></div>
+        <div class="card span8"><div class="card-head"><h3>最近一年日历热力图</h3><p>当前筛选末段 365 天的投稿密度</p></div><div id="chartCalendar" class="chart calendar"></div></div>
+        <div class="card span4"><div class="card-head"><h3>月度分布</h3><p>1–12 月的投稿热度</p></div><div id="chartMonth" class="chart short"></div></div>
         <div class="card span4"><div class="card-head"><h3>星期分布</h3><p>周一到周日</p></div><div id="chartWeekday" class="chart tall"></div></div>
         <div class="card span8"><div class="card-head"><h3>年度投稿间隔</h3><p>平均值与中位数</p></div><div id="chartInterval" class="chart tall"></div></div>
       </div>
@@ -156,8 +161,8 @@
         <div class="card span6"><div class="card-head"><h3>发布时段 × 星期矩阵</h3><p>颜色越深越密集</p></div><div id="chartPubWeekday" class="chart tall"></div></div>
         <div class="card span6"><div class="card-head"><h3>评论年度趋势</h3><p>抓取到的评论按发表年份分布</p></div><div id="chartCommentYear" class="chart tall"></div></div>
         <div class="card span6"><div class="card-head"><h3>评论活跃用户 TOP 15</h3><p>按抓取到的评论总赞数排序</p></div><div id="chartCommenterRank" class="chart tall"></div></div>
-        <div class="card span6"><div class="card-head"><h3>荣誉里程碑时间线</h3><p>全站排行榜 / 每周必看 / 热门收录</p></div><div id="chartHonorTimeline" class="chart tall"></div></div>
-        <div class="card span6"><div class="card-head"><h3>荣誉类型分布</h3><p>站内认可的证据链</p></div><div id="chartHonorType" class="chart tall"></div></div>
+        <div class="card span8"><div class="card-head"><h3>荣誉里程碑时间线</h3><p>全站排行榜 / 每周必看 / 热门收录</p></div><div id="chartHonorTimeline" class="chart wide"></div></div>
+        <div class="card span4"><div class="card-head"><h3>荣誉类型分布</h3><p>站内认可的证据链</p></div><div id="chartHonorType" class="chart short"></div></div>
         <div class="card span6"><div class="card-head"><h3>时长 × 点赞率</h3><p>不同时长区间的观众喜爱程度</p></div><div id="chartDurationInsight" class="chart tall"></div></div>
         <div class="card span6"><div class="card-head"><h3>简介丰富度分析</h3><p>简介字数与播放量的关系</p></div><div id="chartDescInsight" class="chart tall"></div></div>
       </div>
@@ -177,20 +182,20 @@
     <section id="heat">
       <div class="sec-head"><h2>热度</h2><p>播放、点赞、弹幕与互动率全景</p><div class="sec-line"></div></div>
       <div class="grid">
-        <div class="card span8"><div class="card-head"><h3>TOP 15 · 播放量</h3><p>点击跳转 B 站</p></div><div id="chartTopViews" class="chart tall"></div></div>
-        <div class="card span4"><div class="card-head"><h3>互动构成</h3><p>点赞 / 投币 / 收藏 / 分享 / 评论 / 弹幕</p></div><div id="chartEngageMix" class="chart tall"></div></div>
+        <div class="card span12"><div class="card-head"><h3>TOP 15 · 播放量</h3><p>点击跳转 B 站</p></div><div id="chartTopViews" class="chart tall"></div></div>
         <div class="card span12"><div class="card-head"><h3>播放量 × 点赞率散点</h3><p>横轴播放（对数），纵轴点赞率，点大小 = 弹幕量</p></div><div id="chartEngageScatter" class="chart tall"></div></div>
-        <div class="card span6"><div class="card-head"><h3>年度播放趋势</h3><p>按投稿年份汇总</p></div><div id="chartYearViews" class="chart tall"></div></div>
-        <div class="card span6"><div class="card-head"><h3>类型播放贡献</h3><p>按内容类型汇总</p></div><div id="chartTypeViews" class="chart tall"></div></div>
+        <div class="card span8"><div class="card-head"><h3>年度播放趋势</h3><p>按投稿年份汇总</p></div><div id="chartYearViews" class="chart wide"></div></div>
+        <div class="card span4"><div class="card-head"><h3>互动构成</h3><p>点赞 / 投币 / 收藏 / 分享 / 评论 / 弹幕</p></div><div id="chartEngageMix" class="chart short"></div></div>
+        <div class="card span12"><div class="card-head"><h3>类型播放贡献</h3><p>按内容类型汇总</p></div><div id="chartTypeViews" class="chart tall"></div></div>
       </div>
     </section>
 
     <section id="structure">
       <div class="sec-head"><h2>结构</h2><p>内容树、类型组合与创作形态</p><div class="sec-line"></div></div>
       <div class="grid">
-        <div class="card span5"><div class="card-head"><h3>Sunburst 内容树</h3><p>账号 → 类型 → 年代</p></div><div id="chartSunburst" class="chart tall"></div></div>
+        <div class="card span4"><div class="card-head"><h3>Sunburst 内容树</h3><p>账号 → 类型 → 年代</p></div><div id="chartSunburst" class="chart tall"></div></div>
         <div class="card span4"><div class="card-head"><h3>Treemap 主题面积</h3><p>面积代表视频数</p></div><div id="chartTreemap" class="chart tall"></div></div>
-        <div class="card span3"><div class="card-head"><h3>类型形态雷达</h3><p>前 5 类平均字幕行</p></div><div id="chartRadar" class="chart tall"></div></div>
+        <div class="card span4"><div class="card-head"><h3>类型形态雷达</h3><p>前 5 类平均字幕行</p></div><div id="chartRadar" class="chart tall"></div></div>
         <div class="card span12"><div class="card-head"><h3>账号 → 类型 → 年代流动</h3><p>Sankey 全链路</p></div><div id="chartSankey" class="chart wide"></div></div>
       </div>
     </section>
@@ -209,15 +214,15 @@
           <select id="similarSource" aria-label="选择基准视频"></select>
           <div id="similarList" class="similarity-list"></div>
         </div>
-        <div class="card span6"><div class="card-head"><h3>标签关联热力矩阵</h3><p>PMI 点互信息：越高代表越不是偶然共现</p></div><div id="chartTagAffinity" class="chart tall"></div></div>
-        <div class="card span6"><div class="card-head"><h3>标题关键词年度演化</h3><p>主题占比随时间的变化</p></div><div id="chartKeywordEvolution" class="chart tall"></div></div>
+        <div class="card span12"><div class="card-head"><h3>标签关联热力矩阵</h3><p>PMI 点互信息：越高代表越不是偶然共现</p></div><div id="chartTagAffinity" class="chart xtall"></div></div>
+        <div class="card span12"><div class="card-head"><h3>标题关键词年度演化</h3><p>主题占比随时间的变化</p></div><div id="chartKeywordEvolution" class="chart tall"></div></div>
       </div>
     </section>
 
     <section id="rank">
       <div class="sec-head"><h2>榜单</h2><p>字幕量最大的重点内容</p><div class="sec-line"></div></div>
       <div class="grid">
-        <div class="card span12"><div class="card-head"><h3>TOP 20 · 字幕行数</h3><p>点击图表或表格可跳转 B 站</p></div><div id="chartTop" class="chart wide"></div></div>
+        <div class="card span12"><div class="card-head"><h3>TOP 20 · 字幕行数</h3><p>点击图表或表格可跳转 B 站</p></div><div id="chartTop" class="chart xtall"></div></div>
       </div>
     </section>
 
@@ -323,10 +328,10 @@
       <div style="color:var(--text-muted,#8892b0);font-size:13px;">正在加载百科数据…</div>
       <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
     </div>
-<script defer src="vendor/echarts.min.js?v=42"></script>
-<script defer src="data.js?v=42"></script>
-<script defer src="data-quiz.js?v=42"></script>
-<script defer src="app.js?v=42"></script>
+<script defer src="vendor/echarts.min.js?v=43"></script>
+<script defer src="data.js?v=43"></script>
+<script defer src="data-quiz.js?v=43"></script>
+<script defer src="app.js?v=43"></script>
 </body>
 </html>
 
