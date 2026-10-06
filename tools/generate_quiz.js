@@ -93,6 +93,7 @@ const addTrueFalse = (category, difficulty, statement, isTrue, explanation) => {
   add(category, difficulty, statement, ['正确', '错误'], isTrue ? 0 : 1, explanation, 'tf');
 };
 const choice = (category, difficulty, q, correct, wrongPool, explanation) => {
+  if (Array.isArray(correct)) return add(category, difficulty, q, correct, wrongPool, explanation);
   return choiceRaw(category, difficulty, q, correct, wrongPool, explanation);
 };
 const choiceRaw = (category, difficulty, q, correct, wrongPool, explanation) => {
@@ -146,840 +147,154 @@ const yearlyDanmaku = Object.entries(RAW.yearly_danmaku || {}).sort((a,b)=>b[1]-
 const typeViews = Object.entries(videos.reduce((acc,v)=>{ acc[v.type]=(acc[v.type]||0)+(v.view||0); return acc; },{})).sort((a,b)=>b[1]-a[1]);
 
 // ═══ 数据之最 ═══
-for (const [key, label] of [
-  ['view','播放量'], ['like','点赞数'], ['danmaku','弹幕数'],
-  ['coin','投币数'], ['favorite','收藏数'], ['share','分享数'], ['reply','评论数'],
-]) {
-  const sorted = topBy(key);
-  choice('数据之最', 'easy', `怒九${label}最高的视频是哪一部？`, shortTitle(sorted[0]),
-    videos.filter(v => v.bvid !== sorted[0].bvid).slice(0,30).map(v=>shortTitle(v)), `《${shortTitle(sorted[0])}》的${label}是 ${fmtNum(sorted[0][key])}。`);
-}
-const durationSorted = topBy('duration');
-const longestDurationVideo = durationSorted[0];
-const shortestDurationVideo = durationSorted[durationSorted.length - 1];
-choice('数据之最', 'medium', '哪一部视频的时长最长？', shortTitle(longestDurationVideo), durationSorted.slice(1,10).map(v=>shortTitle(v)), `最长视频时长约 ${fmtDur(longestDurationVideo.duration)}。`);
-choice('数据之最', 'medium', '哪一部视频的时长最短？', shortTitle(shortestDurationVideo), durationSorted.slice(-10,-1).reverse().map(v=>shortTitle(v)), `最短视频时长约 ${fmtDur(shortestDurationVideo.duration)}。`);
-add('数据之最', 'medium', '哪一部视频的字幕行数最多？', shortTitle(topBy('sub_lines')[0]), topBy('sub_lines').slice(1,10).map(shortTitle), `该视频共 ${fmtNum(topBy('sub_lines')[0].sub_lines)} 行字幕。`);
-add('数据之最', 'hard', '最长一次连续拖更间隔是多少天？', `${maxGap.gap_days}天`, [`${maxGap.gap_days+1}天`,`${maxGap.gap_days+3}天`,`${Math.max(1,maxGap.gap_days-3)}天`], `出现在《${shortTitle(maxGap)}》之前。`);
-add('数据之最', 'easy', '当前台账共收录多少部视频？', String(videos.length), [String(videos.length+10),String(videos.length-10),String(videos.length+50)], `主号 ${main.length} 部，小号 ${small.length} 部。`);
-add('数据之最', 'easy', '当前台账累计播放量约为多少？', fmtNum(Math.round(RAW.stats?.view/10000)*10000), [fmtNum(Math.round(RAW.stats?.view*0.9/10000)*10000),fmtNum(Math.round(RAW.stats?.view*1.1/10000)*10000),fmtNum(Math.round(RAW.stats?.view*0.5/10000)*10000)], `累计播放约 ${fmtNum(RAW.stats?.view)}。`);
-add('数据之最', 'medium', '怒九有多个视频播放量突破了 300 万？', ['约 30 个','约 15 个','约 50 个','约 10 个'], 0, `播放量 300 万以上的视频约有 ${videos.filter(v=>v.view>=3000000).length} 个。`);
-const lowestViewVideo = topBy('view')[topBy('view').length - 1];
-choice('数据之最', 'hard', '怒九播放量最低的视频属于哪个内容类型？', lowestViewVideo.type, topTypes.map(x=>x[0]).filter(t=>t!==lowestViewVideo.type), `该视频类型是 ${lowestViewVideo.type}。`);
-choice('数据之最', 'medium', '怒九总投币数大约是多少？', fmtNum(Math.round(RAW.stats?.coin/10000)*10000), [fmtNum(Math.round(RAW.stats?.coin*0.5/10000)*10000),fmtNum(Math.round(RAW.stats?.coin*2/10000)*10000),fmtNum(Math.round(RAW.stats?.coin*0.1/10000)*10000)], `总投币数约 ${fmtNum(RAW.stats?.coin)}。`);
-choice('数据之最', 'medium', '怒九总收藏数大约是多少？', fmtNum(Math.round(RAW.stats?.favorite/10000)*10000), [fmtNum(Math.round(RAW.stats?.favorite*0.5/10000)*10000),fmtNum(Math.round(RAW.stats?.favorite*2/10000)*10000),fmtNum(Math.round(RAW.stats?.favorite*0.1/10000)*10000)], `总收藏数约 ${fmtNum(RAW.stats?.favorite)}。`);
-choice('数据之最', 'hard', '怒九总分享数大约是多少？', fmtNum(Math.round(RAW.stats?.share/10000)*10000), [fmtNum(Math.round(RAW.stats?.share*0.5/10000)*10000),fmtNum(Math.round(RAW.stats?.share*2/10000)*10000),fmtNum(Math.round(RAW.stats?.share*0.1/10000)*10000)], `总分享数约 ${fmtNum(RAW.stats?.share)}。`);
-choice('数据之最', 'medium', '怒九总评论数大约是多少？', fmtNum(Math.round(RAW.stats?.reply/10000)*10000), [fmtNum(Math.round(RAW.stats?.reply*0.5/10000)*10000),fmtNum(Math.round(RAW.stats?.reply*2/10000)*10000),fmtNum(Math.round(RAW.stats?.reply*0.1/10000)*10000)], `总评论数约 ${fmtNum(RAW.stats?.reply)}。`);
-choice('数据之最', 'medium', '怒九总弹幕数大约是多少？', fmtNum(Math.round(RAW.stats?.danmaku/10000)*10000), [fmtNum(Math.round(RAW.stats?.danmaku*0.5/10000)*10000),fmtNum(Math.round(RAW.stats?.danmaku*2/10000)*10000),fmtNum(Math.round(RAW.stats?.danmaku*0.1/10000)*10000)], `总弹幕数约 ${fmtNum(RAW.stats?.danmaku)}。`);
+const t = no => { const v = byNo(no); return v ? shortTitle(v) : ''; };
 
-// ═══ 发布规律 ═══
-add('发布规律', 'easy', '怒九发布视频最多的是哪一年？', `${topYears[0][0]}年`, topYears.slice(1,7).map(([y])=>`${y}年`), `${topYears[0][0]} 年共有 ${topYears[0][1]} 部投稿。`);
-add('发布规律', 'medium', '第一部收录视频发布于哪一年？', `${videos[0].date.slice(0,4)}年`, ['2015年','2016年','2018年'].filter(x=>x!==`${videos[0].date.slice(0,4)}年`), `第一部是《${shortTitle(videos[0])}》。`);
-add('发布规律', 'medium', '小号"怒九摸鱼馆"收录了多少部视频？', String(small.length), [String(small.length+5),String(small.length-5),String(small.length*2)], `主号另收录 ${main.length} 部。`);
-add('发布规律', 'easy', '主号"怒九笑"收录了多少部视频？', String(main.length), [String(main.length+10),String(main.length-10),String(main.length+30)], `小号另收录 ${small.length} 部。`);
-add('发布规律', 'easy', '主号 + 小号总共发了多少个视频？', ['约 200 个','约 300 个','约 150 个','约 250 个'], 0, `共收录了 ${videos.length} 个视频（主号 ${main.length} + 小号 ${small.length}）。`);
-choice('发布规律', 'medium', '怒九在 B 站的第一个视频发布于什么时候？', videos[0].date, ['2017-06-25','2017-10-25','2018-01-25'], `第一个视频《${shortTitle(videos[0])}》发布于 ${videos[0].date}。`);
-for (const year of Object.keys(yearCounter).filter(y=>Number(y)>=2022)) {
-  choice('发布规律', 'medium', `${year} 年怒九发布了多少部视频？`, String(yearCounter[year]), [String(yearCounter[year]+1),String(Math.max(1,yearCounter[year]-1)),String(yearCounter[year]+5)], `按当前抓取记录，${year} 年共 ${yearCounter[year]} 部。`);
-}
-{
-  const hourCount = {};
-  videos.forEach(v=>{ if(v.pubdate_iso){ const h=parseInt(v.pubdate_iso.split(' ')[1]?.split(':')[0]); if(!isNaN(h)) hourCount[h]=(hourCount[h]||0)+1; }});
-  const topHour = Object.entries(hourCount).sort((a,b)=>b[1]-a[1])[0];
-  if (topHour) {
-    add('发布规律', 'easy', '怒九最常在什么时间发布视频？',
-      [`${topHour[0]} 点`, `${(Number(topHour[0])+4)%24} 点`, `${(Number(topHour[0])+8)%24} 点`, `${(Number(topHour[0])+12)%24} 点`], 0,
-      `${topHour[0]} 点是最高频的发布时间，共 ${topHour[1]} 个视频在此时发布。`);
-  }
-}
-{
-  const wd = ['周日','周一','周二','周三','周四','周五','周六'];
-  const wdCount = {};
-  videos.forEach(v=>{ if(v.date){ const d=new Date(v.date+'T12:00:00'); wdCount[wd[d.getDay()]]=(wdCount[wd[d.getDay()]]||0)+1; }});
-  const topDay = Object.entries(wdCount).sort((a,b)=>b[1]-a[1])[0];
-  if (topDay) {
-    add('发布规律', 'easy', '怒九最常在星期几发布视频？',
-      [topDay[0], ...wd.filter(x=>x!==topDay[0]).slice(0,3)], 0,
-      `${topDay[0]}是最高频的发布日，共 ${topDay[1]} 个视频。`);
-  }
-}
-{
-  const newest = [...videos].sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
-  choice('发布规律', 'medium', '最新收录的视频发布于哪一天？', newest.date, [newest.date.replace(/\d{2}$/,'01'),newest.date.replace(/\d{4}$/,'0101'),'2026-01-01'], `最新视频是《${shortTitle(newest)}》发布于 ${newest.date}。`);
-}
-{
-  const gapBands = {};
-  videos.forEach(v=>{ if(v.gap_band) gapBands[v.gap_band]=(gapBands[v.gap_band]||0)+1; });
-  const topBand = Object.entries(gapBands).sort((a,b)=>b[1]-a[1])[0];
-  if (topBand) {
-    choice('发布规律', 'hard', '最常见的投稿间隔等级是什么？', topBand[0], Object.keys(gapBands).filter(x=>x!==topBand[0]), `${topBand[0]} 等级共有 ${topBand[1]} 部视频。`);
-  }
-}
-
-// ═══ 标签与分类 ═══
-choice('标签与分类', 'easy', '使用次数最多的标签是什么？', topTags[0][0], topTags.slice(1,10).map(x=>x[0]), `标签统计里"${topTags[0][0]}"出现 ${topTags[0][1]} 次。`);
-choice('标签与分类', 'easy', '数量最多的视频类型是什么？', topTypes[0][0], topTypes.slice(1,10).map(x=>x[0]), `${topTypes[0][0]} 共有 ${topTypes[0][1]} 部。`);
-choice('标签与分类', 'medium', '第二多的视频类型是什么？', topTypes[1][0], [topTypes[0][0],...topTypes.slice(2,9).map(x=>x[0])], `${topTypes[1][0]} 共有 ${topTypes[1][1]} 部。`);
-choice('标签与分类', 'medium', '哪一类内容的播放量贡献最高？', typeViews[0][0], typeViews.slice(1,10).map(x=>x[0]), `${typeViews[0][0]} 累计播放 ${fmtNum(typeViews[0][1])}。`);
-choice('标签与分类', 'hard', `"${topTags[1][0]}"标签出现了多少次？`, String(topTags[1][1]), [String(topTags[1][1]+1),String(Math.max(1,topTags[1][1]-1)),String(topTags[1][1]+5)], `仅低于"${topTags[0][0]}"。`);
-choice('标签与分类', 'medium', '怒九的"绘画/手书"类视频大约有多少部？', String(typeCounter['绘画/手书']), [String(typeCounter['绘画/手书']+10),String(typeCounter['绘画/手书']-5),'50'], `绘画/手书类共有 ${typeCounter['绘画/手书']} 部。`);
-choice('标签与分类', 'medium', '怒九的"搞笑娱乐"类视频大约有多少部？', String(typeCounter['搞笑娱乐']), [String(typeCounter['搞笑娱乐']+5),String(typeCounter['搞笑娱乐']-3),'30'], `搞笑娱乐类共有 ${typeCounter['搞笑娱乐']} 部。`);
-choice('标签与分类', 'medium', '怒九的"爆炸电台"类视频有多少部？', String(typeCounter['爆炸电台']), [String(typeCounter['爆炸电台']+2),String(typeCounter['爆炸电台']-1),'10'], `爆炸电台类共有 ${typeCounter['爆炸电台']} 部。`);
-choice('标签与分类', 'hard', '怒九的"直播录像"类视频有多少部？', String(typeCounter['直播录像']), ['2','3','0'], `直播录像类只有 ${typeCounter['直播录像']} 部。`);
-choice('标签与分类', 'hard', '怒九的"知识科普"类视频大约有多少部？', String(typeCounter['知识科普']), [String(typeCounter['知识科普']+5),String(typeCounter['知识科普']-3),'20'], `知识科普类共有 ${typeCounter['知识科普']} 部。`);
-
-// ═══ 梗与弹幕 ═══
-choice('梗与弹幕', 'easy', '怒九视频中弹幕出现次数最高的名梗是什么？', topMemes[0]?.content || '啊？', topMemes.slice(1,10).map(x=>x.content), `"${topMemes[0]?.content}"重复 ${fmtNum(topMemes[0]?.count)} 次。`);
-choice('梗与弹幕', 'medium', '弹幕名梗榜第二名是什么？', topMemes[1]?.content || '真实', [topMemes[0]?.content,...topMemes.slice(2,10).map(x=>x.content)].filter(Boolean), `"${topMemes[1]?.content}"重复 ${fmtNum(topMemes[1]?.count)} 次。`);
-choice('梗与弹幕', 'medium', '哪一年的弹幕最活跃？', `${yearlyDanmaku[0]?.[0]}年`, yearlyDanmaku.slice(1,7).map(([y])=>`${y}年`), `${yearlyDanmaku[0]?.[0]} 年弹幕量高达 ${fmtNum(yearlyDanmaku[0]?.[1])}。`);
-choice('梗与弹幕', 'hard', `"${topMemes[0]?.content}"共重复多少次？`, fmtNum(topMemes[0]?.count), [fmtNum(topMemes[0]?.count*2),fmtNum(Math.round(topMemes[0]?.count*0.5)),fmtNum(topMemes[0]?.count+100)], `全站弹幕聚合结果为 ${fmtNum(topMemes[0]?.count)}。`);
-choice('梗与弹幕', 'medium', '"俺也一样"弹幕大约出现了多少次？', fmtNum(topMemes[2]?.count), [fmtNum(topMemes[2]?.count*2),fmtNum(Math.round(topMemes[2]?.count*0.5)),fmtNum(topMemes[2]?.count+500)], `约 ${fmtNum(topMemes[2]?.count)} 次。`);
-choice('梗与弹幕', 'easy', '"好耶"弹幕大约出现了多少次？', fmtNum(topMemes[3]?.count), [fmtNum(topMemes[3]?.count*2),fmtNum(Math.round(topMemes[3]?.count*0.5)),fmtNum(topMemes[3]?.count+500)], `约 ${fmtNum(topMemes[3]?.count)} 次。`);
-choice('梗与弹幕', 'hard', '当前台账共抓取到多少条弹幕原始记录？', fmtNum(RAW.stats?.danmaku_records || 0), [fmtNum(Math.round((RAW.stats?.danmaku_records||0)*0.5)),fmtNum((RAW.stats?.danmaku_records||0)+50000),fmtNum(Math.round((RAW.stats?.danmaku_records||0)*2))], `当前台账记录约 ${fmtNum(RAW.stats?.danmaku_records)} 条。`);
-choice('梗与弹幕', 'hard', '弹幕中出现次数第五高的名梗是什么？', topMemes[4]?.content || '新年快乐！', [topMemes[0]?.content,topMemes[1]?.content,topMemes[2]?.content], `"${topMemes[4]?.content}"重复 ${fmtNum(topMemes[4]?.count)} 次。`);
-
-// ═══ 字幕探索 ═══
-choice('字幕探索', 'easy', '当前累计抓取到多少行字幕？', fmtNum(RAW.stats?.sub_lines || 0), [fmtNum(Math.round((RAW.stats?.sub_lines||0)*0.8)),fmtNum(Math.round((RAW.stats?.sub_lines||0)*1.2)),fmtNum(Math.round((RAW.stats?.sub_lines||0)*0.5))], `覆盖 ${videos.filter(v=>v.sub_lines>0).length} 部有字幕视频。`);
-choice('字幕探索', 'medium', `《${shortTitle(topBy('sub_chars')[0])}》在字幕分析中的字幕量是多少？`, `${fmtNum(topBy('sub_chars')[0].sub_chars)} 字符`, [`${fmtNum(topBy('sub_chars')[0].sub_chars*2)} 字符`,`${fmtNum(Math.round(topBy('sub_chars')[0].sub_chars*0.5))} 字符`,`${fmtNum(topBy('sub_chars')[0].sub_chars+100)} 字符`], `它也是字幕字符最多的视频之一。`);
-{
-  const quoted = videos.filter(v => (v.merged || []).length && v.title);
-  for (const video of shuffle(quoted).slice(0, 10)) {
-    const quote = (video.merged[0] || '').replace(/\s+/g, ' ').slice(0, 55);
-    if (!quote) continue;
-    choice('字幕探索', 'medium', `"${quote}……"这段字幕最可能出自哪部视频？`, shortTitle(video), quoted.filter(v=>v.bvid!==video.bvid).map(shortTitle), `来自 ${video.date} 的《${shortTitle(video)}》。`);
-  }
-}
-choice('字幕探索', 'hard', '当前共有多少部视频有字幕数据？', String(videos.filter(v=>v.sub_lines>0).length), [String(videos.filter(v=>v.sub_lines>0).length+10),String(videos.filter(v=>v.sub_lines>0).length-10),String(videos.filter(v=>v.sub_lines>0).length*2)], `有字幕 ${videos.filter(v=>v.sub_lines>0).length} 部，无字幕 ${videos.filter(v=>!v.sub_lines).length} 部。`);
-choice('字幕探索', 'medium', '怒九总字幕字符数大约是多少？', fmtNum(videos.reduce((s,v)=>s+(v.sub_chars||0),0)), [fmtNum(Math.round(videos.reduce((s,v)=>s+(v.sub_chars||0),0)*0.5)),fmtNum(Math.round(videos.reduce((s,v)=>s+(v.sub_chars||0),0)*2)),fmtNum(Math.round(videos.reduce((s,v)=>s+(v.sub_chars||0),0)*0.1))], `总字幕字符约 ${fmtNum(videos.reduce((s,v)=>s+(v.sub_chars||0),0))}。`);
-
-// ═══ 评论区 ═══
-choice('评论区', 'easy', '当前共抓取到多少条前台热门评论？', fmtNum(flatComments.length), [fmtNum(flatComments.length+1000),fmtNum(Math.round(flatComments.length*0.5)),fmtNum(flatComments.length+100)], `覆盖 ${Object.keys(RAW_COMMENTS).length} 部视频。`);
-{
-  const topComment = flatComments.slice().sort((a,b)=>(b.like||0)-(a.like||0))[0];
-  if (topComment) {
-    const topVideo = videos.find(v=>v.bvid===topComment.bvid);
-    choice('评论区', 'medium', '点赞最高的热门评论来自哪部视频？',
-      topVideo ? shortTitle(topVideo) : '未知', videos.filter(v=>v.bvid!==topComment.bvid).slice(0,20).map(shortTitle),
-      `原视频是《${topVideo ? shortTitle(topVideo) : '未知'}》，点赞 ${fmtNum(topComment.like)}。`);
-  }
-}
-{
-  const commentAuthor = flatComments.reduce((acc,c)=>{ if(c.name) acc[c.name]=(acc[c.name]||0)+1; return acc; },{});
-  const topCommenters = Object.entries(commentAuthor).sort((a,b)=>b[1]-a[1]);
-  if (topCommenters.length > 3) {
-    choice('评论区', 'hard', '在热门评论样本中，发言最多的是谁？', topCommenters[0][0], topCommenters.slice(1,12).map(x=>x[0]), `该用户共有 ${topCommenters[0][1]} 条评论进入样本。`);
-    choice('评论区', 'medium', '评论区第二活跃的用户大约发了多少条评论？', String(topCommenters[1][1]), [String(topCommenters[1][1]+5),String(Math.max(1,topCommenters[1][1]-3)),String(topCommenters[1][1]*2)], `${topCommenters[1][0]} 共 ${topCommenters[1][1]} 条。`);
-  }
-}
-{
-  const warmaComments = flatComments.filter(c => c.name && (c.name.includes('warma') || c.name.includes('Warma')));
-  add('评论区', 'hard', 'Warma 在怒九的评论区发过评论吗？',
-    ['有', '没有', '不确定', '只发过一条'], 0,
-    `Warma 在怒九评论区留下了 ${warmaComments.length} 条评论（含回复），是真实的合作互动记录。`);
-}
-{
-  const topLiked = flatComments.slice().sort((a,b)=>(b.like||0)-(a.like||0)).slice(0,5);
-  for (const tc of topLiked.slice(0, 3)) {
-    const msg = String(tc.message || '').replace(/\s+/g, ' ').slice(0, 35);
-    if (!msg) continue;
-    const video = videos.find(v=>v.bvid===tc.bvid);
-    choice('评论区', 'hard', `"${msg}……"这条高赞评论出自哪个视频？`,
-      video ? shortTitle(video) : '未知', videos.filter(v=>v.bvid!==tc.bvid).slice(0,15).map(shortTitle),
-      `来自《${video ? shortTitle(video) : '未知'}》，点赞 ${fmtNum(tc.like)}。`);
-  }
-}
-
-// ═══ 深度对比 ═══
-choice('深度对比', 'medium', '哪个账号收录的视频播放量更高？', '主号（怒九笑）', ['小号（怒九摸鱼馆）','两者完全一样','无法比较'], `主号播放 ${fmtNum(sum(main,'view'))}，小号播放 ${fmtNum(sum(small,'view'))}。`);
-add('深度对比', 'medium', '两个账号哪个的点赞量更高？', '主号（怒九笑）', ['小号（怒九摸鱼馆）','两者一样','无法比较'], `主号点赞 ${fmtNum(sum(main,'like'))}，小号点赞 ${fmtNum(sum(small,'like'))}。`);
-add('深度对比', 'easy', '主号"怒九笑"的粉丝量更接近哪个数？', fmtNum(mainProfile.fans || 2142890), [fmtNum(smallProfile.fans || 600230), fmtNum(Math.round((mainProfile.fans||2142890)/10)), fmtNum((mainProfile.fans||2142890)*10)], `快照粉丝数 ${fmtNum(mainProfile.fans || 2142890)}。`);
-add('深度对比', 'medium', '小号"怒九摸鱼馆"的粉丝量更接近哪个数？', fmtNum(smallProfile.fans || 600230), [fmtNum(mainProfile.fans || 2142890), fmtNum(Math.round((smallProfile.fans||600230)/10)), fmtNum((smallProfile.fans||600230)*2)], `快照粉丝数 ${fmtNum(smallProfile.fans || 600230)}。`);
-add('深度对比', 'hard', '哪个账号的平均单部播放量更高？', '主号（怒九笑）', ['小号（怒九摸鱼馆）','完全一样','无法比较'], `主号均播 ${fmtNum(Math.round(sum(main,'view')/main.length))}，小号均播 ${fmtNum(Math.round(sum(small,'view')/small.length))}。`);
-add('深度对比', 'medium', '主号和小号加起来粉丝大约有多少？', ['约 270 万','约 150 万','约 500 万','约 100 万'], 0, `主号约 ${fmtNum(mainProfile.fans || 2142890)} + 小号约 ${fmtNum(smallProfile.fans || 600230)} ≈ 275 万总粉丝。`);
-add('深度对比', 'medium', '怒九所有视频的总点赞数大约是多少？', ['约 1700 万','约 500 万','约 3000 万','约 800 万'], 0, `总点赞数高达 ${fmtNum(RAW.stats?.like)}！`);
-add('深度对比', 'hard', '怒九所有视频的字幕加起来大约有多少行？', ['约 4 万行','约 1 万行','约 8 万行','约 2 万行'], 0, `总字幕行数约 ${fmtNum(RAW.stats?.sub_lines)} 行。`);
-add('深度对比', 'hard', '主号总播放量大约是小号的多少倍？', ['约 7 倍','约 3 倍','约 15 倍','约 20 倍'], 0, `主号总播放约 ${fmtNum(sum(main,'view'))}，小号约 ${fmtNum(sum(small,'view'))}。`);
-{
-  const champ = [...videos].filter(v=>v.view>10000).sort((a,b)=>(b.like/b.view)-(a.like/a.view))[0];
-  if (champ) {
-    choice('深度对比', 'hard', '点赞率最高（点赞÷播放）的视频是哪一个？',
-      shortTitle(champ), videos.filter(v=>v.view>10000 && v.bvid!==champ.bvid).slice(0,15).map(shortTitle),
-      `《${shortTitle(champ)}》的点赞率高达 ${(champ.like/champ.view*100).toFixed(1)}%。`);
-  }
-}
-choice('深度对比', 'medium', '怒九主号的 B 站等级是多少？', `${mainProfile.level || 6} 级`, ['5 级','4 级','7 级'], `主号和小号都达到了 B 站 ${mainProfile.level || 6} 级。`);
-choice('深度对比', 'hard', '怒九两个账号的等级是否一样？', '一样，都是 6 级', ['不一样','主号 7 级','小号 5 级'], `主号 ${mainProfile.level || 6} 级，小号 ${smallProfile.level || 6} 级。`);
-
-// ═══ 冷知识 ═══
-choice('冷知识', 'easy', '主号"怒九笑"的 UID 是多少？', '14751040', ['14751041','693485501','1730275511'], '主号空间链接为 UID 14751040。');
-choice('冷知识', 'easy', '小号"怒九摸鱼馆"的 UID 是多少？', '693485501', ['693485502','14751040','53456'], '小号空间链接为 UID 693485501。');
-choice('冷知识', 'medium', '主号签名中提到的合作邮箱域名是什么？', 'qq.com', ['163.com','gmail.com','outlook.com'], mainProfile.sign || '签名中写有合作邮箱。');
-choice('冷知识', 'medium', '小号的签名如何介绍大号？', '"大号@怒九笑"', ['"我是大号"','"没有大号"','"合作号"'], smallProfile.sign || '小号签名标注了大号。');
-add('冷知识', 'easy', '怒九的小号叫什么名字？', '怒九摸鱼馆', ['怒九日常','怒九小号','摸鱼号'], `小号"怒九摸鱼馆"主要发游戏实况和日常碎片。`);
-add('冷知识', 'medium', '怒九主号的官方认证是什么？', 'bilibili 知名UP主', ['bilibili 优质UP主','bilibili 知名画师','没有认证'], `主号有"bilibili 知名UP主"认证。`);
-add('冷知识', 'medium', '怒九的微博账号是什么？', '@怒九今天爆肝了吗', ['@怒九笑','@怒九official','@nujiu_nujiu'], `主号签名写有"微博@怒九今天爆肝了吗"。`);
-add('冷知识', 'hard', '怒九最频繁的合作对象是谁？', 'Warma', ['捏碳','岚少','CB'], `Warma 是怒九最频繁的合作对象，两人一起做了很多双人游戏实况。`);
-add('冷知识', 'hard', '怒九和 Warma 是什么关系？', ['兄妹', '朋友', '同学', '同事'], 0, `从"看亲哥玩恐怖游戏"等标题可以看出他们是兄妹关系。`);
-add('冷知识', 'medium', '怒九百科技巧台账总共覆盖了多少个视频？', String(videos.length), [String(videos.length+20),String(videos.length-20),'300'], `当前覆盖 ${videos.length} 部视频。`);
-add('冷知识', 'hard', '怒九百科技巧台账总共抓取了多少条评论？', fmtNum(flatComments.length), [fmtNum(flatComments.length*2),fmtNum(Math.round(flatComments.length*0.5)),'50000'], `共抓取了 ${fmtNum(flatComments.length)} 条评论。`);
-add('冷知识', 'hard', '怒九百科技巧台账总共抓取了多少条弹幕？', fmtNum(RAW.stats?.danmaku_records || 0), [fmtNum(Math.round((RAW.stats?.danmaku_records||0)*0.5)),fmtNum((RAW.stats?.danmaku_records||0)*2)], `共抓取了 ${fmtNum(RAW.stats?.danmaku_records)} 条弹幕。`);
-add('冷知识', 'medium', '怒九百科技巧台账的年限跨度大约是多少？', ['约 9 年','约 5 年','约 3 年','约 15 年'], 0, `从 ${videos[0].date} 到 ${videos[videos.length-1].date}，跨度约 9 年。`);
-
-// ═══ 视频内容（手写精品题） ═══
-{
-  add('视频内容', 'easy', '怒九的第一部视频是什么类型的内容？',
-    ['绘画/手书', '游戏实况', '翻唱', '电台'], 0,
-    '《【守望先锋手书】因为我们是男英雄啊！》是一部守望先锋手书作品，发布于 2017 年 8 月。');
-}
-{
-  add('视频内容', 'easy', '《双影奇境》是怒九和谁一起合作的游戏实况？',
-    ['Warma', '捏碳', '岚少', 'CB'], 0,
-    '这是怒九和 Warma 合作的双人游戏实况，播放量高达 790 万，是怒九播放量最高的视频。');
-}
-{
-  add('视频内容', 'easy', '《绝对不许关灯！》是怒九和谁一起合作的？',
-    ['Warma', '捏碳', '碳碳', '独自完成的'], 0,
-    '这是怒九和 Warma 合作的恐怖游戏实况，播放量约 493 万。');
-}
-{
-  add('视频内容', 'medium', '《REANIMAL》实况的中文名是什么？',
-    ['生灵重塑', '动物重生', '生物进化', '重塑纪元'], 0,
-    '《REANIMAL（生灵重塑）》是怒九和 Warma 合作的横冲直撞惊险求生游戏实况。');
-}
-{
-  add('视频内容', 'medium', '《Subnautica2》的中文名是什么？',
-    ['异星水域', '深海迷航', '美丽水世界', '海底大冒险'], 0,
-    'Subnautica 2 的中文翻译是《异星水域》，是一款深海探索游戏。');
-}
-{
-  add('视频内容', 'medium', '《轨道双子星》是什么类型的游戏？',
-    ['宇宙冒险', '恐怖生存', '解谜闯关', '竞速赛车'], 0,
-    '《轨道双子星》是怒九和 Warma 合作的宇宙冒险游戏实况。');
-}
-{
-  add('视频内容', 'medium', '怒九的"星露谷！田园开荒生活"系列和谁一起合作？',
-    ['Warma', '捏碳', '独自完成', '碳碳'], 0,
-    '这是怒九和 Warma 合作的星露谷物语田园开荒系列实况。');
-}
-{
-  add('视频内容', 'easy', '怒九的"撩到我算我输"系列玩的是什么类型的游戏？',
-    ['乙女/恋爱游戏', '恐怖游戏', '射击游戏', '模拟经营'], 0,
-    '"撩到我算我输"是怒九玩各种乙女/恋爱游戏的系列，以吐槽游戏中的套路和渣男为主。');
-}
-{
-  add('视频内容', 'easy', '怒九的"速推荐"系列内容是什么？',
-    ['推荐好玩游戏', '推荐动漫', '推荐歌曲', '推荐小说'], 0,
-    '"速推荐"是怒九快速推荐各类好玩游戏（尤其是像素游戏）的系列。');
-}
-{
-  add('视频内容', 'easy', '怒九的"恐怖游戏大挑战"系列是什么内容？',
-    ['玩恐怖游戏并记录反应', '恐怖故事讲述', '恐怖电影解说', '恐怖场景还原'], 0,
-    '这是怒九玩各种恐怖游戏并记录自己被吓到反应的系列。');
-}
-{
-  add('视频内容', 'medium', '怒九的"看亲哥玩恐怖游戏"系列中的"亲哥"是谁？',
-    ['Warma', '捏碳', '怒九的哥哥', 'CB'], 0,
-    '从内容看，"亲哥"指的是 Warma，怒九会录制 Warma 玩恐怖游戏时的反应。');
-}
-{
-  add('视频内容', 'medium', '怒九的"全国统一的人类共同行为记录"系列目前有几期？',
-    ['4 期', '3 期', '5 期', '2 期'], 0,
-    '目前有 4 期：①每日の痛、②每日一气、③论文！燃尽！、④你的牙痒吗？');
-}
-{
-  add('视频内容', 'medium', '怒九的"艺术就是___"系列内容是什么？',
-    ['赛博绘画创作', '烹饪', '手工制作', '摄影'], 0,
-    '这是怒九在电脑上进行赛博绘画创作的系列，标题中的"___"是留空。');
-}
-{
-  add('视频内容', 'medium', '怒九的"这都什么乱七八糟的模拟器"系列玩的是什么？',
-    ['各种奇怪模拟器', '正常模拟经营', '赛车模拟器', '飞行模拟器'], 0,
-    '这是怒九试玩各种奇怪搞笑的模拟器游戏的系列。');
-}
-{
-  add('视频内容', 'hard', '怒九的 UT（Undertale）手书主要画的是哪组角色？',
-    ['人类组', '骷髅组', '怪物组', '全角色'], 0,
-    '怒九的 UT 手书主要围绕人类组角色（Frisk、Chara 等）进行创作。');
-}
-{
-  add('视频内容', 'hard', '《【UT手书】我猹就是饿死，也不会吃福你一点东西》中的"猹"是谁？',
-    ['Chara', 'Frisk', 'Sans', 'Papyrus'], 0,
-    '"猹"是 Chara 的谐音昵称，这是怒九的 Undertale 手书作品。');
-}
-{
-  add('视频内容', 'medium', '怒九的"怒九的脑洞日常"系列是什么类型？',
-    ['生活脑洞小剧场', '游戏攻略', '美食评测', '旅行Vlog'], 0,
-    '这是怒九分享日常生活脑洞和吐槽的小剧场系列。');
-}
-{
-  add('视频内容', 'medium', '《守望先锋手书》的完整标题是？',
-    ['因为我们是男英雄啊！', '我们是英雄！', '守望先锋日常', '英雄集结'], 0,
-    '完整标题是《【守望先锋手书】因为我们是男英雄啊！》，是怒九 2017 年的第一部投稿。');
-}
-{
-  add('视频内容', 'medium', '怒九的《【中国式家长】女儿？宠就对了！》中培养了谁？',
-    ['女儿', '儿子', '宠物', '自己'], 0,
-    '怒九在《中国式家长》中先玩了女儿版，标题是"女儿？宠就对了！"。');
-}
-{
-  add('视频内容', 'medium', '《友尽厨房2》是怒九和谁一起合作的？',
-    ['朋友合作', 'Warma', '独自完成', '捏碳'], 0,
-    '标题中有"笑爆合作"，是怒九和朋友一起玩的友尽厨房2，互相迫害的乐趣。');
-}
-{
-  add('视频内容', 'hard', '怒九玩过的《底特律：变人》手书角色是？',
-    ['汉克', '康纳', '卡拉', '马库斯'], 0,
-    '《【底特律 手书】汉克想变得可爱》中画的是汉克。');
-}
-{
-  add('视频内容', 'hard', '怒九的《杀戮天使 手书》的副标题是什么？',
-    ['SECURITY CHECK', 'GAME OVER', 'HAPPY END', 'GAME START'], 0,
-    '完整标题是《【杀戮天使 手书】SECURITY CHECK 见识下靠谱的成年男性》。');
-}
-{
-  add('视频内容', 'medium', '怒九和 Warma 合作过哪个关于越狱的游戏？',
-    ['逃出生天', '逃生2', '双人成行', '分手厨房'], 0,
-    '《【逃出生天 衔九】悠闲养老越狱过》是怒九和 Warma 合作的越狱游戏。');
-}
-{
-  add('视频内容', 'medium', '怒九在《Splatoon3》（斯普拉遁3）中的自嘲标题是什么？',
-    ['4k狙也太难用了吧！', '我是最强乌贼！', '乌贼天花板！', '喷神驾到！'], 0,
-    '标题是《【怒九】4k狙也太难用了吧！玩点不一样的Splatoon3！》。');
-}
-{
-  add('视频内容', 'hard', '怒九和 Warma 合作的《鬼打墙了！！！！》属于什么类型？',
-    ['游戏实况', '绘画手书', '翻唱', '电台'], 0,
-    '《【warma/怒九】鬼打墙了！！！！》是两人合作的游戏实况，发布在小号。');
-}
-{
-  add('视频内容', 'medium', '怒九的《【自制互动游戏】猜不到下一秒！》发布于哪一年？',
-    ['2020', '2019', '2021', '2018'], 0,
-    '发布于 2020 年情人节，是一个沙雕互动视频游戏。');
-}
-{
-  add('视频内容', 'hard', '怒九的《我编了个离谱至极的校园故事！！！》属于什么类型？',
-    ['游戏实况', '绘画手书', '翻唱', '科普'], 0,
-    '虽然标题说的是"编故事"，但分类是游戏实况。');
-}
-{
-  add('视频内容', 'medium', '《【warma/怒九】姐妹俩打打闹闹的日常【电台】》是哪个系列？',
-    ['爆炸电台', '翻唱电台', '游戏电台', '吐槽电台'], 0,
-    '这是爆炸电台类视频，发布于 2021 年 4 月。');
-}
-{
-  add('视频内容', 'hard', '《【warma/怒九】我被开水烫伤后的养伤生活【爆米花电台02】》中谁被烫伤了？',
-    ['Warma', '怒九', '捏碳', '不确定'], 0,
-    '从标题看，Warma 被开水烫伤了，在电台中分享了养伤经历。');
-}
-{
-  add('视频内容', 'medium', '怒九的《当恐怖电影套路遇到沙雕会怎么样？》属于什么类型？',
-    ['绘画/手书', '游戏实况', '配音', '搞笑娱乐'], 0,
-    '分类是绘画/手书，是怒九用绘画方式恶搞恐怖电影套路的作品。');
-}
-{
-  add('视频内容', 'hard', '怒九和 Warma 合作的《去逛古怪的摆摊市集！》是什么类型？',
-    ['Vlog', '游戏实况', '手书', '翻唱'], 0,
-    '标题明确标注了【Vlog】，是两人线下逛古怪市集的记录。');
-}
-{
-  add('视频内容', 'medium', '怒九的《搬家Vlog 进行一个工作间的装饰！》发布于哪一年？',
-    ['2021', '2020', '2022', '2023'], 0,
-    '发布于 2021 年 10 月，是怒九搬家后装饰工作间的Vlog。');
-}
-{
-  add('视频内容', 'hard', '《【怒九】好玩到爆肝的像素游戏！》是"速推荐"的第几期？',
-    ['第二期', '第一期', '第三期', '第四期'], 0,
-    '这是 2018 年 6 月的"速推荐"第二期，推荐了五款好玩到爆肝的像素游戏。');
-}
-{
-  add('视频内容', 'medium', '怒九的《论高考》视频是送给谁的？',
-    ['美术生', '理科生', '文科生', '体育生'], 0,
-    '标题明确写了"送给美术生的一个小视频"，是给美术高考生的鼓励。');
-}
-{
-  add('视频内容', 'medium', '怒九的《艺术生遭受到了哪些偏见？》属于什么类型？',
-    ['知识科普', '搞笑娱乐', '游戏实况', '绘画手书'], 0,
-    '这是知识科普类视频，讨论艺术生遭受的偏见和误解。');
-}
-{
-  add('视频内容', 'hard', '怒九在《看门狗2》实况中把游戏玩成了什么？',
-    ['旅游团', '射击游戏', '赛车游戏', '潜行游戏'], 0,
-    '标题是《我们九某人旅游团！带你游遍旧金山！》，把看门狗2玩成了旧金山旅游。');
-}
-{
-  add('视频内容', 'medium', '《凶宅惊魂》是怒九在哪一年玩的？',
-    ['2018', '2017', '2019', '2020'], 0,
-    '发布于 2018 年 10 月，恰好在万圣节前夕。');
-}
-{
-  add('视频内容', 'medium', '怒九的《古墓丽影：暗影》实况中的主角是谁？',
-    ['劳拉', '奥丁', '雷神', '阿瑞斯'], 0,
-    '《古墓丽影：暗影》的主角是劳拉·克劳馥。');
-}
-{
-  add('视频内容', 'hard', '怒九的《怀旧系》视频推荐的是哪类游戏？',
-    ['4399单机小游戏', '街机游戏', '掌机游戏', '主机大作'], 0,
-    '推荐的是"经典的4399单机小游戏"，满满的童年回忆。');
-}
-{
-  add('视频内容', 'medium', '怒九的《南方人第一次去澡堂是什么样的？》属于什么系列？',
-    ['怒九的脑洞日常', '速推荐', '恐怖游戏大挑战', '艺术就是___'], 0,
-    '这是"怒九的脑洞日常"系列，分享南方人第一次去澡堂的经历。');
-}
-{
-  add('视频内容', 'hard', '怒九在《Deltarune三角符文》实况中怎么评价这个游戏？',
-    ['Toby新作', '神作', '一般', '烂作'], 0,
-    '标题称"Deltarune三角符文实况 Toby新作！"。');
-}
-{
-  add('视频内容', 'medium', '《岚少 I AM THE MAN-MeMe》是什么类型的内容？',
-    ['MeMe 手书', '翻唱', '游戏实况', '科普'], 0,
-    '这是一个以岚少为主角的 MeMe（音乐手书）作品。');
-}
-{
-  add('视频内容', 'hard', '怒九的《【RPG-meme】玩家的抱怨 怪物猎人x守望先锋》是什么？',
-    ['跨游戏 MeMe', '游戏攻略', '游戏评测', '游戏新闻'], 0,
-    '这是一个跨游戏（怪物猎人 x 守望先锋）的 RPG MeMe 手书。');
-}
-{
-  add('视频内容', 'medium', '怒九的《【MHW】猎人美容院！》玩的是什么游戏？',
-    ['怪物猎人世界', '怪物猎人崛起', '怪物猎人物语', '怪物猎人边境'], 0,
-    'MHW 是 Monster Hunter World（怪物猎人世界）的缩写。');
-}
-{
-  add('视频内容', 'hard', '怒九的《【寻梦环游记】同一部电影的两种结局》是什么内容？',
-    ['对比讨论视频', '翻唱', '游戏实况', '手书'], 0,
-    '这是对电影《寻梦环游记》不同结局的对比讨论，属于知识科普类。');
-}
-{
-  add('视频内容', 'medium', '怒九的《你有被自己蠢哭的瞬间吗？！》属于什么类型？',
-    ['翻唱/音乐', '搞笑娱乐', '游戏实况', '知识科普'], 0,
-    '分类是翻唱/音乐，虽然标题看起来像搞笑话题，实际是音乐类内容。');
-}
-{
-  add('视频内容', 'hard', '怒九和 Warma 的《让我们快乐地搬家吧！》属于什么类型？',
-    ['翻唱/音乐', '游戏实况', 'Vlog', '手书'], 0,
-    '分类是翻唱/音乐，虽然标题提到搬家，实际是音乐类内容。');
-}
-{
-  add('视频内容', 'hard', '怒九的《我画了一本书！再不进来听就变成黑历史了！！》属于什么类型？',
-    ['翻唱/音乐', '绘画手书', '游戏实况', '搞笑'], 0,
-    '虽然标题提到"画了一本书"，分类是翻唱/音乐（有声读物）。');
-}
-{
-  add('视频内容', 'medium', '怒九在《我最擅长照顾人了！》中自称擅长什么？',
-    ['照顾人', '做饭', '画画', '打游戏'], 0,
-    '标题明确说"我最擅长照顾人了"，这是怒九的自嘲式标题。');
-}
-{
-  add('视频内容', 'medium', '怒九的《我！铲车女郎！出道！！》玩的是什么？',
-    ['铲车模拟器', '厨房模拟器', '卡车模拟器', '农场模拟器'], 0,
-    '这是怒九玩铲车模拟器游戏的实况。');
-}
-{
-  add('视频内容', 'hard', '《【Warma/怒九/捏碳】初次参加面试就直接通过的三人！》有几个人？',
-    ['3 人', '2 人', '4 人', '5 人'], 0,
-    '从标题看有 Warma、怒九、捏碳三人。');
-}
-{
-  add('视频内容', 'medium', '《【怒九】完蛋了！目标完不成啦啊啊！！》属于什么类型？',
-    ['绘画/手书', '游戏实况', '搞笑', '科普'], 0,
-    '分类是绘画/手书，是怒九画的关于目标完不成的手书作品。');
-}
-{
-  add('视频内容', 'hard', '怒九和 Warma 合作的《绝对不许关灯！》发布于哪一年？',
-    ['2022', '2021', '2023', '2020'], 0,
-    '发布于 2022 年 9 月，是一起玩的恐怖游戏实况。');
-}
-{
-  add('视频内容', 'medium', '《【怒九】在破烂堆里当艺术家！》属于什么类型？',
-    ['游戏实况', '绘画手书', '搞笑', '翻唱'], 0,
-    '这是怒九玩一个在破烂堆中当艺术家的模拟器游戏。');
-}
-{
-  add('视频内容', 'medium', '《【怒九】我毫无节奏感啊！！！》玩的是什么类型的游戏？',
-    ['节奏音游', '射击游戏', '恐怖游戏', '模拟经营'], 0,
-    '标题提到"毫无节奏感"，说明这是一个节奏/音乐类游戏。');
-}
-{
-  add('视频内容', 'hard', '《【怒九/碳碳】伪人超市来了两个神人店员》中的"碳碳"大号叫什么？',
-    ['捏碳碳碳碳', 'Warma', '怒九笑', '岚少'], 0,
-    '视频简介写明：嘉宾碳碳，大号是捏碳碳碳碳。');
-}
-{
-  add('视频内容', 'medium', '《【warma/怒九】超市惊魂夜！！！》发布于哪一年？',
-    ['2026', '2025', '2024', '2023'], 0,
-    '发布于 2026 年 2 月，是两人合作的恐怖游戏实况。');
-}
-{
-  add('视频内容', 'hard', '怒九的《【怒九】这是真的初音吗？？？》属于什么类型？',
-    ['游戏实况', '绘画手书', '翻唱', '科普'], 0,
-    '这是怒九玩一个与初音未来相关的游戏的实况。');
-}
-{
-  add('视频内容', 'medium', '《【warma/怒九】合成大脂肪！最胖啦！》玩的是什么游戏？',
-    ['合成大西瓜类游戏', '烹饪游戏', '减肥游戏', '运动游戏'], 0,
-    '从标题看，这是一个类似"合成大西瓜"的合成类游戏，但主题是"合成大脂肪"。');
-}
-{
-  add('视频内容', 'medium', '《【warma/怒九】找到所有闹鬼的照片！》属于什么类型？',
-    ['游戏实况', '绘画手书', '搞笑', '翻唱'], 0,
-    '这是两人合作玩找鬼照片类游戏的实况。');
-}
-{
-  add('视频内容', 'hard', '怒九的《【怒九】第一次做面包 会变成什么样？！》发布在小号还是主号？',
-    ['小号（摸鱼馆）', '主号（怒九笑）', '两个都发了', '没发过'], 0,
-    '发布于小号"怒九摸鱼馆"，属于日常碎片类内容。');
-}
-{
-  add('视频内容', 'hard', '《【warma/怒九】我需要帮助！快来！》是什么类型的合作？',
-    ['游戏实况', 'Vlog', '电台', '翻唱'], 0,
-    '这是两人合作的游戏实况，标题充满了紧急求助感。');
-}
-{
-  add('视频内容', 'medium', '怒九的《【怒九】来玩胆量测试吧！》是和谁合作的？',
-    ['Warma', '捏碳', '独自完成', '碳碳'], 0,
-    '这是和 Warma 合作玩胆量测试类游戏的实况。');
-}
-{
-  add('视频内容', 'hard', '《【warma/怒九】整个海域，我是老大！》玩的是什么？',
-    ['海盗类游戏', '钓鱼游戏', '海洋生物游戏', '潜水游戏'], 0,
-    '从标题看，这是两人合作玩的海盗类或海战类游戏。');
-}
-{
-  add('视频内容', 'medium', '《【warma/怒九】出国！去逛全球最大的游戏展吧！》属于什么类型？',
-    ['爆炸电台', 'Vlog', '游戏实况', '科普'], 0,
-    '分类是爆炸电台，是两人出国逛游戏展后的电台分享。');
-}
-{
-  add('视频内容', 'hard', '怒九的《【怒九】进来被我表白！！》是什么内容？',
-    ['游戏实况', '真正的表白', '翻唱', '手书'], 0,
-    '虽然标题写"表白"，实际是游戏实况（可能是表白类小游戏）。');
-}
+choice('数据之最', 'easy', '以下哪部视频的播放量最高？', t(169), [t(111), t(90), t(70)],
+  '《双影奇境》播放约 791 万，是怒九播放量最高的视频；第二名的《绝对不许关灯！》约 493 万。');
+choice('数据之最', 'medium', '以下哪部视频的点赞数最高？', t(117), [t(169), t(111), t(93)],
+  '《让我们快乐地搬家吧！》获赞约 35.4 万，是全站点赞最高的视频——点赞王是翻唱/音乐类作品，并不是播放王《双影奇境》。');
+choice('数据之最', 'medium', '以下哪部视频的投币数最高？', t(93), [t(136), t(117), t(169)],
+  '《姐妹俩打打闹闹的日常【电台】》投币约 15.2 万，领先《去逛古怪的摆摊市集》（约 14.1 万）和《让我们快乐地搬家吧！》（约 13.1 万）。');
+choice('数据之最', 'easy', '以下哪部视频的评论数最多？', t(131), [t(117), t(46), t(69)],
+  '《淦！你们的爱好…好帅啊！！》收到 11999 条评论，是评论数最高的视频。');
+choice('数据之最', 'hard', '以下哪部视频被分享的次数最多？', t(62), [t(136), t(117), t(169)],
+  '分享最高的不是合作大爆款，而是"撩到我算我输"系列的《玛丽苏用力过猛的游戏》，被分享 12182 次；《去逛古怪的摆摊市集》以 11924 次紧随其后。');
+choice('数据之最', 'medium', '以下哪部视频的收藏数最高？', t(169), [t(139), t(120), t(126)],
+  '《双影奇境》被收藏约 17.2 万次，领先《气到缺氧》（约 14.3 万）和《绝对不许关灯！》（约 12.9 万）。');
+choice('数据之最', 'medium', '以下哪部视频的时长最长？', t(169), [t(71), t(203), t(30)],
+  '《双影奇境》合集时长约 744 分钟，比《逃出生天》（约 372 分钟）和《轨道双子星》（约 340 分钟）长得多。');
+choice('数据之最', 'hard', '以下哪部视频的点赞率（点赞÷播放）最高？', t(135), [t(204), t(68), t(131)],
+  '《这些怪故事太占脑内存了》点赞率约 14.4%，是全部视频中最高的，领先《出国！去逛全球最大的游戏展吧！》（约 11.2%）。');
+choice('数据之最', 'hard', '以下哪部视频的弹幕数最多？', t(169), [t(69), t(111), t(93)],
+  '《双影奇境》弹幕 37919 条，只比第二名《人类迷惑行为》（37572 条）多三百多条，是险胜的弹幕冠军。');
+add('数据之最', 'hard', '怒九最长的一次连续拖更大约持续了多少天？', ['约245天', '约120天', '约60天', '约30天'], 0,
+  '最长一次断更约 245 天，发生在小号投稿《笨徒弟摸鱼王之旅》（2022-07-06）之前。');
 
 // ═══ 考古与里程碑 ═══
-{
-  add('考古与里程碑', 'medium', '怒九的第一部视频发布于哪一年？',
-    ['2017', '2015', '2016', '2018'], 0,
-    '《【守望先锋手书】因为我们是男英雄啊！》发布于 2017 年 8 月 25 日。');
-}
-{
-  add('考古与里程碑', 'medium', '怒九在哪一年发布了最多的视频？',
-    ['2018', '2019', '2020', '2021'], 0,
-    '2018 年共发布了 33 个视频，是最高产的年份。');
-}
-{
-  add('考古与里程碑', 'easy', '怒九总共发了多少个视频？',
-    ['约 200 个', '约 100 个', '约 300 个', '约 50 个'], 0,
-    `共收录了 ${videos.length} 个视频。`);
-}
-{
-  add('考古与里程碑', 'medium', '怒九的小号是哪一年开始发视频的？',
-    ['2021', '2020', '2019', '2022'], 0,
-    '小号"怒九摸鱼馆"的第一个视频发布于 2021 年。');
-}
-{
-  add('考古与里程碑', 'hard', '《【怒九/warma 】线下见面★ 宅人终于出去玩啦！！》最可能记录了哪次互动？',
-    ['怒九和 Warma 的线下见面', '两账号的线上连麦', '怒九的首次投稿', '小号的第一条动态'], 0,
-    '该视频是 2021-02-04 的主号投稿，简介称这是和沃玛的一期线下联动。');
-}
-{
-  add('考古与里程碑', 'hard', '怒九的《2020 你还要我怎样？大学生现状。》属于什么类型？',
-    ['搞笑娱乐', '知识科普', '游戏实况', '绘画手书'], 0,
-    '这是 2020 年关于大学生现状的搞笑娱乐类视频。');
-}
-{
-  add('考古与里程碑', 'medium', '怒九的《大学毕业有何感想有什么打算？》发布于哪一年？',
-    ['2021', '2020', '2022', '2019'], 0,
-    '发布于 2021 年 7 月，是关于大学毕业的讨论视频。');
-}
-{
-  add('考古与里程碑', 'hard', '怒九的《LGBT群体遭到了哪些误解？》属于什么类型？',
-    ['游戏实况', '知识科普', '搞笑娱乐', '绘画手书'], 0,
-    '这是 2019 年关于 LGBT 群体误解的科普类视频。');
-}
-{
-  add('考古与里程碑', 'medium', '怒九在哪个视频中提到了"黑历史"？',
-    ['黑历史来了！谁没有中二病和玛丽苏过呢？', '【怒九】完蛋了！', '我编了个离谱至极的校园故事！', '看亲哥玩恐怖游戏'], 0,
-    '《黑历史来了！谁没有中二病和玛丽苏过呢？》是怒九自曝黑历史的视频。');
-}
-{
-  add('考古与里程碑', 'hard', '怒九的《有个亲哥是什么体验？兄妹战争！！》中的"亲哥"是谁？',
-    ['Warma', '不知名哥哥', '捏碳', 'CB'], 0,
-    '从内容看，"亲哥"指的是 Warma，两人是兄妹关系。');
-}
+choice('考古与里程碑', 'easy', '怒九在 B 站的第一部投稿是哪部视频？', t(1), [t(2), t(8), t(12)],
+  '第一部投稿是 2017-08-25 的《【守望先锋手书】因为我们是男英雄啊！》，全长只有 1 分钟左右，类型是绘画/手书。');
+choice('考古与里程碑', 'medium', '怒九的第一部游戏实况是哪部视频？', t(2), [t(1), t(46), t(111)],
+  '2018-01-13 的《【Undertale】某地下的御茶会议》是收录记录里最早的游戏实况，也是 UT 系列的开端。');
+choice('考古与里程碑', 'medium', '怒九的第一部知识科普类视频是？', t(8), [t(24), t(34), t(44)],
+  '2018-04-30 的《【论高考】送给美术生的一个小视频》是第一部知识科普，专门做给美术高考生打气。');
+choice('考古与里程碑', 'medium', '小号"怒九摸鱼馆"的第一部投稿是？', t(88), [t(101), t(116), t(149)],
+  '小号首投是 2021-01-01 的《【TWO TIME※】上课摸的鱼》，全长只有 70 秒，类型是翻唱/音乐，拿到了约 69 万播放。');
+choice('考古与里程碑', 'medium', '"生活日常"类的第一部视频是？', t(101), [t(102), t(136), t(117)],
+  '《沃玛正在看怒九的新视频……》（2021-10-05，小号）是生活日常类的起点，内容就是 Warma 观看怒九新视频的反应。');
+choice('考古与里程碑', 'medium', '"爆炸电台"的第一期是哪部视频？', t(93), [t(182), t(204), t(205)],
+  '2021-04-02 的《姐妹俩打打闹闹的日常【电台】》是爆炸电台第一期，它至今仍是全站投币数最高的视频。');
+choice('考古与里程碑', 'hard', '怒九目前收录的唯一一部"直播录像"是？', t(44), [t(2), t(30), t(68)],
+  '2019-03-17 的《【国产良心像素游戏】惊艳！残酷而美丽的童话故事！》是唯一一部直播录像，时长约 122 分钟。');
+
+// ═══ 系列与内容 ═══
+choice('系列与内容', 'easy', '《星露谷！田园开荒生活》目前更新到哪个季节？', ['第一年 秋', '第一年 冬', '第二年 春', '第一年 夏'], 0,
+  '目前更新到《第一年 秋》（2024-12-27，小号），冬天的部分还没有出。');
+choice('系列与内容', 'easy', '《星露谷！田园开荒生活》的三集都发在哪个账号？', ['小号（怒九摸鱼馆）', '主号（怒九笑）', 'Warma的账号', '两个账号都发过'], 0,
+  '春、夏、秋三集全部发在小号"怒九摸鱼馆"。');
+choice('系列与内容', 'medium', '星露谷春、夏、秋三季中哪一季播放量最高？', ['第一年 春', '第一年 夏', '第一年 秋', '三季差不多'], 0,
+  '《春》约 153 万、《夏》约 84 万、《秋》约 82 万，第一季明显领先。');
+choice('系列与内容', 'medium', '"全国统一的人类共同行为记录"第④期是哪部视频？', t(105), [t(85), t(89), t(95)],
+  '④是《你的牙痒吗？》（2021-11-06）；①每日の痛、②每日一气、③论文！燃尽！。');
+choice('系列与内容', 'hard', '以下哪部视频不属于"全国统一"①–④编号系列？', t(119), [t(85), t(89), t(105)],
+  '《全国统一的军训吐槽！》（2022-09-03）标题里没有编号，是独立于①–④之外的一期，类型还是绘画/手书。');
+choice('系列与内容', 'easy', '《爆米花电台02》主要聊的是什么？', ['开水烫伤后的养伤生活', '高考备考经验', '出国逛游戏展', '搬家装修心得'], 0,
+  '小号 2025-09-10 的《【warma/怒九】我被开水烫伤后的养伤生活【爆米花电台02】》，标题里就写明了主题。');
+choice('系列与内容', 'medium', '以下哪部视频属于"爆炸电台"系列？', t(205), [t(201), t(202), t(203)],
+  '《我们俩第一次出国！》（2026-10-03）是爆炸电台第 4 期；同期的《轨道双子星》是游戏实况，不属于电台系列。');
+choice('系列与内容', 'easy', '"撩到我算我输"系列是怒九在玩哪一类游戏？', ['乙女/恋爱游戏', '恐怖游戏', '音乐节奏游戏', '模拟经营游戏'], 0,
+  '该系列是怒九单人吐槽各类乙女/恋爱游戏的合集，玛丽苏、渣男桥段都是固定素材。');
+choice('系列与内容', 'medium', '"怒九的脑洞日常"系列里讲"南方人第一次去澡堂"的是哪部视频？', t(46), [t(69), t(57), t(131)],
+  '2019-04-14 的《南方人第一次去澡堂是什么样的？》是脑洞日常系列的名场面之一，播放约 234 万。');
 
 // ═══ 合作专题 ═══
-{
-  add('合作专题', 'easy', '怒九和 Warma 合作过的游戏不包括以下哪个？',
-    ['塞尔达传说', '双影奇境', 'REANIMAL', 'Subnautica2'], 0,
-    '怒九和 Warma 合作过《双影奇境》《REANIMAL》《Subnautica2》《星露谷》等，但没有合作过《塞尔达传说》。');
-}
-{
-  add('合作专题', 'medium', '怒九和 Warma 合作的《星露谷！田园开荒生活》覆盖了哪些季节？',
-    ['春夏秋冬', '只有春天', '只有夏天', '只有春秋'], 0,
-    '该系列包含了第一年 春、夏、秋三个季度，加上后续更新。');
-}
-{
-  add('合作专题', 'medium', '怒九和 Warma 合作的《胡乱修改游戏导致的黑暗世界！》发布于哪一年？',
-    ['2025', '2024', '2023', '2022'], 0,
-    '发布于 2025 年 8 月，是两人合作的游戏实况。');
-}
-{
-  add('合作专题', 'hard', '怒九和 Warma 合作的《人生的陷阱被我们踩了个遍！》发布在哪个账号？',
-    ['小号（摸鱼馆）', '主号（怒九笑）', 'Warma的账号', '都没发'], 0,
-    '发布于小号"怒九摸鱼馆"。');
-}
-{
-  add('合作专题', 'hard', '在当前台账中，标题同时标注 Warma 和怒九，且标题或标签带“恐怖”的视频有几部？',
-    ['5 部', '3 部', '4 部', '7 部'], 0,
-    '分别是《让我们快乐地搬家吧！》《绝对阳光快乐的园丁模拟器》《来玩胆量测试吧！》《REANIMAL（生灵重塑）》和《Subnautica2：异星水域》。');
-}
-{
-  add('合作专题', 'medium', '怒九和 Warma 合作过《您的外卖骑手掉沟里了》，这是什么类型？',
-    ['游戏实况', '真实Vlog', '搞笑', '科普'], 0,
-    '这是两人合作玩的外卖骑手模拟器游戏实况，发布于 2024 年。');
-}
-{
-  add('合作专题', 'hard', '怒九和 Warma 合作的《红色月亮！来赏月聊天吧》属于什么类型？',
-    ['生活日常', '游戏实况', '爆炸电台', '翻唱'], 0,
-    '这是两人在红色月亮下赏月聊天的日常视频。');
-}
-{
-  add('合作专题', 'hard', '在当前台账中，标题同时含有“撩到我”和“算我输”的视频有几部？',
-    ['16 部', '12 部', '14 部', '18 部'], 0,
-    '共 16 部，从 2019 年的《与大叔恋爱的游戏》到 2022 年的《与邪神恋爱吧》。');
-}
-{
-  add('合作专题', 'hard', '《【Warma/怒九/捏碳】我们的新游戏发布？！》播放量约多少？',
-    ['约 470 万', '约 100 万', '约 50 万', '约 200 万'], 0,
-    '播放量约 470 万，是怒九播放量第四高的视频。');
-}
-{
-  add('合作专题', 'medium', '怒九和 Warma 合作的《玩个音游差点友情翻车》发布在哪一年？',
-    ['2024', '2023', '2025', '2022'], 0,
-    '发布于 2024 年 5 月，是两人合作玩的音游。');
-}
+choice('合作专题', 'easy', '《初次参加面试就直接通过的三人！》的三位主角是谁？', ['Warma、怒九笑、捏碳', 'Warma、怒九笑、兴儿哥', '捏碳、兴儿哥、怒九笑', 'Warma、捏碳、兴儿哥'], 0,
+  '标题写明【Warma/怒九笑/捏碳】，视频发布于 2020-02-29，播放约 361 万。');
+choice('合作专题', 'medium', '《我们的新游戏发布？！》的剧本是谁写的？', ['Warma', '怒九', '捏碳', '三人轮流执笔'], 0,
+  'Warma 在 3.4 万赞的高赞评论里说明：大家讨论出各种点子之后，由她把点子统合写成了这次的剧本。');
+choice('合作专题', 'easy', '《伪人超市》的嘉宾"碳碳"的大号叫什么？', ['捏碳碳碳碳', 'Warma', '兴儿哥', '碳碳花花'], 0,
+  '简介写明"嘉宾：碳碳——大号：捏碳碳碳碳"，视频发布于 2026-08-16 的小号。');
+choice('合作专题', 'medium', '按《双影奇境》简介的分工，插画/封面是谁画的？', ['怒九', 'Warma', '捏碳', '游戏官方'], 0,
+  '简介写明"剪辑：warma，插画/封面：怒九"——剪辑是 Warma，封面插画是怒九自己画的。');
+choice('合作专题', 'medium', '《轨道双子星》是在什么平台上游玩的？', ['Switch 2', 'PS5', 'PC', 'Xbox Series'], 0,
+  '简介写明"轨道双子星（平台：Switch 2）"，另外封面/剪辑是怒九，外置字幕是 Warma。');
+choice('合作专题', 'medium', '《去逛古怪的摆摊市集！》里两人逛的是哪里的集市？', ['大理', '上海', '成都', '长沙'], 0,
+  '简介写明"用一周的时间和怒九一起把大理的好多个集市都逛了一圈"，摄像/剪辑是 Warma，插画是怒九。');
+choice('合作专题', 'medium', '在本百科收录的台账里，以下哪款游戏没有出现在怒九和 Warma 的合作实况标题中？', ['塞尔达传说', '双影奇境', 'REANIMAL', 'Subnautica2'], 0,
+  '台账里能找到《双影奇境》《REANIMAL（生灵重塑）》《Subnautica2：异星水域》等合作实况，但没有塞尔达传说。');
+choice('合作专题', 'hard', '《线下见面★ 宅人终于出去玩啦！！》被归为什么类型？', ['知识科普', '游戏实况', '生活日常', '搞笑娱乐'], 0,
+  '这部 2021-02-04 的线下出游视频被归入"知识科普"类，播放约 328 万——分类和内容反差很大。');
+choice('合作专题', 'medium', 'Warma 在《我们的新游戏发布？！》评论里说"时隔两年终于再次联动"，两年前的三人合作是哪部？', t(70), [t(93), t(169), t(202)],
+  '2020-02-29 的《初次参加面试》是三人的合作短剧，到 2022-03-26 的《新游戏发布》正好隔了约两年。');
+
+// ═══ 评论区 ═══
+choice('评论区', 'medium', '在《让我们快乐地搬家吧！》评论区，怒九笑本人获赞最高的评论是什么？', ['好～', '真的会谢', '哈哈哈哈哈', '谢谢有被感动到'], 0,
+  '怒九笑只回了一个"好～"，拿下约 6.05 万赞。');
+choice('评论区', 'hard', '"果然内置空调，看的我后背好凉快"这条 3.3 万赞评论出自哪部视频？', t(117), [t(46), t(131), t(135)],
+  '来自《让我们快乐地搬家吧！》评论区（兴儿哥，约 3.32 万赞）。');
+choice('评论区', 'medium', '"澡堂，一个让你横空出柜的地方"这条名场面评论出自哪部视频？', t(46), [t(69), t(57), t(131)],
+  '来自 2019 年的《南方人第一次去澡堂是什么样的？》，获赞约 2.48 万。');
+choice('评论区', 'easy', 'Warma 在《有个亲哥是什么体验？》评论区是怎么称呼怒九的？', ['怒九妹妹！', '怒九宝！', '九妹！', '小怒九！'], 0,
+  'Warma 的高赞评论只有一句"怒九妹妹！[害羞]"，获赞约 4.21 万。');
+choice('评论区', 'medium', '"我超靠谱的对吧！"是 Warma 在哪部视频评论区的发言？', t(90), [t(70), t(111), t(93)],
+  '来自《线下见面★ 宅人终于出去玩啦！！》评论区，获赞约 4.02 万。');
+choice('评论区', 'medium', '"你的房间很好看，我的了！"是 Warma 在哪部视频评论区的发言？', t(102), [t(117), t(136), t(90)],
+  '来自《搬家Vlog 进行一个工作间的装饰！》评论区，获赞约 3.51 万。');
+choice('评论区', 'hard', 'Warma 在《我画了一本书！》评论区炫耀了什么？', ['她收藏了怒九全世界限量的绘本之一', '她也画过一本书', '她把书借给了图书馆', '她收到了十本签名版'], 0,
+  '原话是"哈哈！怒九全世界限量的绘本之一在我这里"，获赞约 3.17 万。');
+choice('评论区', 'medium', '在《甲方：你好像在玩一种很新的索尼电视广告……》评论区互动的官方账号是？', ['索尼中国', '索尼互动娱乐', '微软 Xbox', '任天堂'], 0,
+  '索尼中国官方号留言"这确实是一种很新的形式呢[doge]看到时，就连阿索自己都没猜出来~"，获赞约 4514。');
+choice('评论区', 'hard', '在《出国！去逛全球最大的游戏展吧！》评论区，Warma 提到自己高考哪一科接近满分？', ['英语', '数学', '语文', '理综'], 0,
+  'Warma 的高赞评论写道"以防你们不知道当年沃玛高考英语接近满分"。');
+choice('评论区', 'medium', '在《双影奇境》评论区，Warma 向观众承诺会怎样更新？', ['超快速更新完', '每周准时更新', '看心情慢慢更', '直接鸽掉'], 0,
+  '原话"喜欢的话欢迎三连呀，我们会超快速更新完～"，获赞约 4251。');
+
+// ═══ 梗与弹幕 ═══
+add('梗与弹幕', 'hard', '全部弹幕里出现次数最多的梗是？', ['啊？', '真实', '俺也一样', '好耶'], 0,
+  '"啊？"以 5424 次登顶，领先"真实"（3587 次）和"俺也一样"（3524 次）。');
+add('梗与弹幕', 'medium', '《伪人超市来了两个神人店员》40 秒附近的弹幕高峰里，刷得最多的是哪个颜文字？', ['^q^', '哈哈哈', '6', '笑死'], 0,
+  '40 秒处出现 492 条的峰值，满屏都是"^q^"。');
+add('梗与弹幕', 'medium', '《进来被我表白！！》哪个位置的弹幕最密集？', ['开播 20 秒附近', '视频开头', '视频中段', '结尾附近'], 0,
+  '开播 20 秒处出现 1027 条的弹幕峰值，观众刷的是"炽焰天穹be like："等梗。');
+
+// ═══ 账号档案 ═══
+choice('账号档案', 'easy', '怒九主号简介里留的微博账号是？', ['@怒九今天爆肝了吗', '@怒九今天更新了吗', '@怒九爆肝日记', '@怒九笑超话'], 0,
+  '主号签名写着"微博@怒九今天爆肝了吗"，还留了合作邮箱 chickenfish@vip.qq.com。');
+add('账号档案', 'easy', '主号"怒九笑"的粉丝数大约是多少？', ['约214万', '约60万', '约500万', '约100万'], 0,
+  '主号粉丝约 214.3 万，小号"怒九摸鱼馆"约 60 万。');
+add('账号档案', 'medium', '主号"怒九笑"账号主页显示的累计获赞大约是多少？', ['约1377万', '约137万', '约6000万', '约500万'], 0,
+  '主号获赞约 1377 万，小号约 132 万。');
+choice('账号档案', 'easy', '小号"怒九摸鱼馆"的简介说开小号是为了什么？', ['投些开心摸鱼的视频', '发自拍和日常照片', '直播打游戏', '转发大号动态'], 0,
+  '签名原文："这是怒九小号，打算投些开心摸鱼的视频！"');
 
 // ═══ 真假判断 ═══
-addTrueFalse('真假判断', 'easy', '怒九的主号叫"怒九笑"。', true, '主号名为"怒九笑"，UID 14751040。');
-addTrueFalse('真假判断', 'easy', '怒九的小号叫"怒九摸鱼馆"。', true, '小号名为"怒九摸鱼馆"，UID 693485501。');
-addTrueFalse('真假判断', 'medium', '怒九和 Warma 是情侣关系。', false, '怒九和 Warma 是兄妹关系，不是情侣。');
-addTrueFalse('真假判断', 'medium', '怒九的粉丝比 Warma 多。', false, 'Warma 主号约 500 万粉丝，怒九主号约 214 万，Warma 更多。');
-addTrueFalse('真假判断', 'hard', '怒九的"爆炸电台"超过 10 期。', false, '怒九的爆炸电台只有 4 期。');
-addTrueFalse('真假判断', 'medium', '怒九玩过 Undertale（传说之下）相关的手书。', true, '怒九有多部 UT 手书作品，是人类组方向的创作。');
-addTrueFalse('真假判断', 'medium', '怒九和 Warma 合作过《星露谷》。', true, '两人合作了"星露谷！田园开荒生活"系列。');
-addTrueFalse('真假判断', 'easy', '怒九的总播放量超过了 2 亿。', true, '总播放量约 2.85 亿，远超 2 亿。');
-addTrueFalse('真假判断', 'hard', '怒九只有主号一个账号。', false, '怒九有两个账号：主号"怒九笑"和小号"怒九摸鱼馆"。');
-addTrueFalse('真假判断', 'medium', '怒九做过手工/绘画相关的视频。', true, '怒九有 23 部绘画/手书类视频。');
-addTrueFalse('真假判断', 'medium', '怒九所有视频都是游戏实况。', false, '虽然游戏实况占多数（137 部），但也有绘画、搞笑、翻唱、科普等类型。');
-addTrueFalse('真假判断', 'hard', '怒九的小号发的视频比主号多。', false, '主号有 166 部，小号只有 39 部。');
-addTrueFalse('真假判断', 'hard', '怒九的"撩到我算我输"系列是和 Warma 一起玩的。', false, '"撩到我算我输"系列是怒九独自玩的乙女游戏系列，不是和 Warma 合作。');
-addTrueFalse('真假判断', 'medium', '怒九和 Warma 合作过《双影奇境》。', true, '这是两人最著名的合作作品，播放量高达 790 万。');
-addTrueFalse('真假判断', 'easy', '怒九的粉丝主要是男性。', false, '从评论区内容和视频类型（乙女游戏、绘画等）来看，粉丝群体以女性为主。');
-addTrueFalse('真假判断', 'medium', '怒九的"全国统一的人类共同行为记录"系列已经完结。', true, '目前出到第 4 期"你的牙痒吗？"，后续暂无更新。');
-addTrueFalse('真假判断', 'hard', '怒九翻唱过 JOJO 的 OP。', false, '目前没有找到怒九翻唱 JOJO OP 的记录。');
-addTrueFalse('真假判断', 'medium', '怒九和捏碳也是合作搭档。', true, '《【Warma/怒九/捏碳】初次参加面试》《【怒九/碳碳】伪人超市》等证明他们是搭档。');
-addTrueFalse('真假判断', 'hard', '怒九的"速推荐"系列超过 10 期。', false, '"速推荐"系列大约有 6-8 期，没有超过 10 期。');
-addTrueFalse('真假判断', 'medium', '怒九的总弹幕数超过了 100 万。', true, '总弹幕数约 121 万，超过 100 万。');
-addTrueFalse('真假判断', 'hard', '怒九在《中国式家长》中培养了儿子。', false, '怒九培养的是女儿，标题是"女儿？宠就对了！"。');
-addTrueFalse('真假判断', 'medium', '怒九的最高播放视频是和 Warma 合作的。', true, '最高播放的《双影奇境》正是和 Warma 合作的作品。');
-addTrueFalse('真假判断', 'hard', '怒九的爆炸电台最早一期发布于 2018 年。', false, '怒九的爆炸电台最早一期是 2021 年的《姐妹俩打打闹闹的日常》。');
-addTrueFalse('真假判断', 'medium', '怒九的主号和小号等级一样。', true, '两个账号都是 B 站 6 级。');
-addTrueFalse('真假判断', 'hard', '怒九总共只发过 100 个视频。', false, '怒九总共发了 205 个视频（主号 166 + 小号 39）。');
-addTrueFalse('真假判断', 'medium', '怒九和 Warma 合作过恐怖游戏。', true, '两人合作过《绝对不许关灯！》等多部恐怖游戏。');
-addTrueFalse('真假判断', 'hard', '怒九的"艺术就是___"系列全部是绘画手书类型。', false, '该系列有一部（2024年）被分类为"游戏实况"，不全是绘画手书。');
-addTrueFalse('真假判断', 'medium', '怒九在 B 站是知名 UP 主。', true, '主号有"bilibili 知名UP主"官方认证。');
-addTrueFalse('真假判断', 'hard', '怒九的爆炸电台总共超过 10 期。', false, '只有 4 期。');
-addTrueFalse('真假判断', 'easy', '怒九的总点赞数超过了 1000 万。', true, '总点赞数约 1694 万，超过 1000 万。');
-
-// ═══ 数据补充（精选） ═══
-{
-  const uniqueTitleWrongs = (correctVideo, pool, count = 3) => {
-    const seen = new Set([shortTitle(correctVideo)]);
-    const wrongs = [];
-    for (const video of pool) {
-      if (video.bvid === correctVideo.bvid) continue;
-      const title = shortTitle(video);
-      if (seen.has(title)) continue;
-      seen.add(title);
-      wrongs.push(title);
-      if (wrongs.length === count) break;
-    }
-    return wrongs;
-  };
-
-  const yearViewRows = Object.entries(videos.reduce((acc, video) => {
-    const year = video.date?.slice(0, 4);
-    if (year) acc[year] = (acc[year] || 0) + (video.view || 0);
-    return acc;
-  }, {})).sort((a, b) => b[1] - a[1]);
-  choice('数据之最', 'hard', '哪一年的视频累计播放量最高？', `${yearViewRows[0][0]}年`,
-    yearViewRows.slice(1, 6).map(([year]) => `${year}年`),
-    `${yearViewRows[0][0]} 年累计播放 ${fmtNum(yearViewRows[0][1])}。`);
-
-  const typeLikeRows = Object.entries(videos.reduce((acc, video) => {
-    acc[video.type] = (acc[video.type] || 0) + (video.like || 0);
-    return acc;
-  }, {})).sort((a, b) => b[1] - a[1]);
-  choice('标签与分类', 'hard', '哪一类内容的累计点赞量最高？', typeLikeRows[0][0],
-    typeLikeRows.slice(1, 6).map(([type]) => type),
-    `${typeLikeRows[0][0]} 累计获得 ${fmtNum(typeLikeRows[0][1])} 次点赞。`);
-
-  const peakRows = videos
-    .map(video => {
-      const peak = (video.peaks || []).slice().sort((a, b) => (b.count || 0) - (a.count || 0))[0];
-      return { video, peak };
-    })
-    .filter(row => row.peak && Number.isFinite(row.peak.t) && (row.peak.count || 0) > 100)
-    .sort((a, b) => b.peak.count - a.peak.count)
-    .slice(0, 14);
-  for (const { video, peak } of peakRows) {
-    const wrongTimes = (video.peaks || [])
-      .filter(item => item !== peak && Number.isFinite(item.t) && item.t !== peak.t)
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 8)
-      .map(item => `${item.t} 秒`);
-    if (new Set(wrongTimes).size < 3) continue;
-    choice('梗与弹幕', 'hard', `《${shortTitle(video)}》里弹幕最密集的片段大约从几秒开始？`,
-      `${peak.t} 秒`, [...new Set(wrongTimes)],
-      `${peak.t} 秒处的峰值约 ${fmtNum(peak.count)} 条。`);
-  }
-
-  const sampleOccurrences = new Map();
-  for (const video of videos) {
-    for (const peak of video.peaks || []) {
-      for (const rawSample of peak.samples || []) {
-        const sample = String(rawSample || '').replace(/\s+/g, ' ').trim();
-        if (sample.length < 8) continue;
-        if (!sampleOccurrences.has(sample)) sampleOccurrences.set(sample, new Set());
-        sampleOccurrences.get(sample).add(video.bvid);
-      }
-    }
-  }
-  const sampleRows = videos.flatMap(video => (video.peaks || []).flatMap(peak => (peak.samples || []).map(rawSample => {
-    const sample = String(rawSample || '').replace(/\s+/g, ' ').trim();
-    return { video, sample };
-  })))
-    .filter(row => {
-      const uniqueChars = new Set(row.sample.replace(/[\s\p{P}\p{S}]/gu, '')).size;
-      return row.sample.length >= 10
-        && uniqueChars / row.sample.length >= 0.45
-        && sampleOccurrences.get(row.sample)?.size === 1;
-    })
-    .sort((a, b) => b.sample.length - a.sample.length);
-  const seenSamples = new Set();
-  for (const { video, sample } of sampleRows) {
-    if (seenSamples.has(sample)) continue;
-    seenSamples.add(sample);
-    const wrongs = videos.filter(item => item.bvid !== video.bvid && (item.view || 0) > 1000000)
-      .slice(0, 30).map(shortTitle);
-    if (wrongs.length < 3) continue;
-    choice('梗与弹幕', 'hard', `"${sample}"这条观众弹幕最可能出自哪部视频？`,
-      shortTitle(video), wrongs,
-      `这条弹幕出现在 ${video.date} 的《${shortTitle(video)}》中。`);
-    if (seenSamples.size === 12) break;
-  }
-
-  const subtitleRows = videos
-    .filter(video => (video.merged || []).length > 0 && (video.sub_lines || 0) > 0)
-    .sort((a, b) => (b.sub_lines || 0) - (a.sub_lines || 0))
-    .slice(0, 24);
-  for (const video of subtitleRows) {
-    const quote = (video.merged[0] || '').replace(/\s+/g, ' ').trim().slice(0, 55);
-    if (quote.length < 10) continue;
-    const wrongs = subtitleRows.filter(item => item.bvid !== video.bvid).map(shortTitle);
-    if (wrongs.length < 3) continue;
-    choice('字幕探索', 'hard', `"${quote}……"这段字幕最可能出自哪部视频？`,
-      shortTitle(video), wrongs,
-      `来自 ${video.date} 的《${shortTitle(video)}》。`);
-  }
-
-  const commentSourceRows = Object.entries(RAW_COMMENTS)
-    .map(([bvid, comments]) => ({
-      video: videos.find(video => video.bvid === bvid),
-      comments: (comments || []).slice().sort((a, b) => (b.like || 0) - (a.like || 0)),
-    }))
-    .filter(row => row.video && row.comments.length >= 5)
-    .sort((a, b) => (b.video.reply || 0) - (a.video.reply || 0))
-    .slice(0, 28);
-  for (const { video, comments } of commentSourceRows) {
-    const topComment = comments.find(comment => comment.message && String(comment.message).trim().length >= 10);
-    if (!topComment) continue;
-    const message = String(topComment.message).replace(/\s+/g, ' ').trim().slice(0, 55);
-    const wrongs = commentSourceRows.filter(item => item.video.bvid !== video.bvid).map(item => shortTitle(item.video));
-    if (message.length < 10 || wrongs.length < 3) continue;
-    choice('评论区', 'hard', `"${message}"这条高赞评论最可能出现在哪部视频？`,
-      shortTitle(video), wrongs,
-      `评论来自《${shortTitle(video)}》，获赞 ${fmtNum(topComment.like || 0)}。`);
-  }
-
-  const commentAuthorRows = [];
-  const seenAuthors = new Set();
-  for (const { video, comments } of commentSourceRows) {
-    for (const comment of comments) {
-      if (!comment.name || seenAuthors.has(comment.name) || (comment.like || 0) < 200) continue;
-      const authorWrongPool = comments
-        .map(item => item.name)
-        .filter(name => name && name !== comment.name && !seenAuthors.has(name));
-      if (authorWrongPool.length < 3) continue;
-      seenAuthors.add(comment.name);
-      commentAuthorRows.push({ video, comment, authorWrongPool });
-      break;
-    }
-  }
-  for (const { video, comment, authorWrongPool } of commentAuthorRows.slice(0, 14)) {
-    choice('评论区', 'hard', `“${String(comment.message || '').replace(/\s+/g, ' ').trim().slice(0, 40)}……”这条高赞评论是谁发的？`,
-      comment.name, authorWrongPool,
-      `评论内容是“${String(comment.message || '').slice(0, 30)}”，获赞 ${fmtNum(comment.like || 0)}。`);
-  }
-
-  const yearFirstRows = Object.keys(yearCounter)
-    .filter(year => (yearCounter[year] || 0) >= 4)
-    .sort()
-    .map(year => {
-      const pool = videos.filter(video => video.date.startsWith(year));
-      const first = pool.slice().sort((a, b) => a.date.localeCompare(b.date))[0];
-      return { year, pool, first };
-    })
-    .filter(row => row.first);
-  for (const { year, pool, first } of yearFirstRows) {
-    const wrongs = uniqueTitleWrongs(first, pool);
-    if (wrongs.length < 3) continue;
-    choice('考古与里程碑', 'hard', `${year} 年收录记录中的第一部视频是哪一部？`,
-      shortTitle(first), wrongs,
-      `《${shortTitle(first)}》发布于 ${first.date}。`);
-  }
-
-  const typeMilestoneRows = topTypes
-    .filter(([type, count]) => type && count >= 4)
-    .slice(0, 7)
-    .map(([type, count]) => {
-      const pool = videos.filter(video => video.type === type);
-      return {
-        type,
-        count,
-        first: pool.slice().sort((a, b) => a.date.localeCompare(b.date))[0],
-        longest: pool.slice().sort((a, b) => (b.duration || 0) - (a.duration || 0))[0],
-      };
-    });
-  for (const { type, count, first, longest } of typeMilestoneRows) {
-    if (first) {
-      const wrongs = uniqueTitleWrongs(first, videos.filter(video => video.type === type && video.date > first.date));
-      if (wrongs.length < 3) continue;
-      choice('考古与里程碑', 'hard', `当前收录记录中，最早的“${type}”内容是哪一部？`,
-        shortTitle(first), wrongs,
-        `《${shortTitle(first)}》发布于 ${first.date}，该类型共收录 ${count} 部。`);
-    }
-    if (longest && (longest.duration || 0) >= 600) {
-      const wrongs = uniqueTitleWrongs(longest, videos.filter(video => video.type === type && video.bvid !== longest.bvid));
-      if (wrongs.length < 3) continue;
-      choice('视频内容', 'hard', `“${type}”类收录视频里时长最长的是哪一部？`,
-        shortTitle(longest), wrongs,
-        `《${shortTitle(longest)}》时长约 ${fmtDur(longest.duration)}。`);
-    }
-  }
-}
+addTrueFalse('真假判断', 'medium', '《双影奇境》既是播放量最高的视频，也是时长最长的视频。', true,
+  '播放约 791 万、合集时长约 744 分钟，两项纪录都属于它。');
+addTrueFalse('真假判断', 'easy', '"爆炸电台"系列目前一共有 4 期。', true,
+  '《姐妹俩打打闹闹的日常》《爆米花电台02》《出国逛游戏展》《我们俩第一次出国》正好 4 期。');
+addTrueFalse('真假判断', 'medium', '《星露谷！田园开荒生活》已经把春夏秋冬四季更新完了。', false,
+  '目前只更到《第一年 秋》，冬天的部分还没有出。');
+addTrueFalse('真假判断', 'medium', '小号的第一部投稿是游戏实况。', false,
+  '小号首投《【TWO TIME※】上课摸的鱼》是翻唱/音乐类。');
+addTrueFalse('真假判断', 'medium', '索尼中国的官方账号在怒九的视频评论区留过言。', true,
+  '在《甲方：你好像在玩一种很新的索尼电视广告……》下留言，获赞约 4514。');
+addTrueFalse('真假判断', 'easy', '怒九的主号和小号都是 B 站 6 级。', true, '两个账号等级都是 6 级。');
+addTrueFalse('真假判断', 'medium', '《让我们快乐地搬家吧！》被归类为游戏实况。', false,
+  '虽然标题提到搬家，它其实是翻唱/音乐类，而且是全站点赞最高的视频。');
+addTrueFalse('真假判断', 'hard', '《我画了一本书！》被归类为绘画/手书。', false,
+  '尽管标题说"画了一本书"，它被归入翻唱/音乐类（有声读物形式）。');
+addTrueFalse('真假判断', 'hard', '全站被分享最多的视频来自"撩到我算我输"系列。', true,
+  '《【撩到我 算我输】玛丽苏用力过猛的游戏》被分享 12182 次，排名第一。');
+addTrueFalse('真假判断', 'easy', '小号的粉丝数比主号多。', false, '小号约 60 万，主号约 214.3 万。');
+addTrueFalse('真假判断', 'easy', '小号简介里说打算投些"开心摸鱼的视频"。', true,
+  '签名原文："这是怒九小号，打算投些开心摸鱼的视频！"');
+addTrueFalse('真假判断', 'medium', '《初次参加面试》和《我们的新游戏发布？！》都是 Warma、怒九、捏碳的三人合作。', true,
+  '两部标题都写着三人，分别是 2020 年和 2022 年的两次合作。');
+addTrueFalse('真假判断', 'medium', '怒九发过很多部"直播录像"类视频。', false,
+  '台账里直播录像只有 1 部：2019 年的《国产良心像素游戏》。');
+addTrueFalse('真假判断', 'medium', '《伪人超市来了两个神人店员》发布在小号。', true,
+  '2026-08-16 发布在小号"怒九摸鱼馆"。');
+addTrueFalse('真假判断', 'medium', '"bilibili 知名UP主"官方认证两个账号都有。', false,
+  '只有主号"怒九笑"带知名UP主认证。');
 
 // ═══ Output ═══
 const titleCandidates = new Set(videos.map(v => shortTitle(v)));
