@@ -42,6 +42,7 @@ def main() -> None:
         except Exception:
             weibo = {}
     insight_videos = insights.get("videos") or {}
+    coverage = read_json(ROOT / "site" / "data-coverage.json", {}).get("videos", {})
 
     followers = {}
     for key, value in (account_stats.get("snapshots") or [{}])[-1].get("accounts", {}).items():
@@ -57,6 +58,7 @@ def main() -> None:
         bvid = row["bvid"]
         info = meta.get(bvid) or {}
         stat = info.get("stat") or {}
+        subtitle_lines = read_json(ROOT / "site" / "subtitles" / (bvid + ".json"), {}).get("lines", [])
         pubdate = info.get("pubdate")
         pub_dt = None
         if pubdate:
@@ -78,6 +80,8 @@ def main() -> None:
             "intro_count": row.get("intro_count", 0),
             "sub_lines": row.get("sub_lines", 0),
             "sub_chars": row.get("sub_chars", 0),
+            "subtitle_available_lines": len(subtitle_lines),
+            "coverage": coverage.get(bvid),
             "bvid": bvid,
             "aid": row.get("aid") or info.get("aid"),
             "duration": row.get("duration") or info.get("duration") or 0,
