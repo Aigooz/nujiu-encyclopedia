@@ -192,22 +192,5 @@
   "我看我能多活多长一",
   "I love you mom",
   "You're a real special lady"
- ],
- "pages": [
-  {
-   "cid": 89958629,
-   "page": 1,
-   "from": "vupload",
-   "part": "P1",
-   "duration": 328,
-   "vid": "",
-   "weblink": "",
-   "dimension": {
-    "width": 1920,
-    "height": 1080,
-    "rotate": 0
-   },
-   "ctime": 1556941482
-  }
  ]
 }

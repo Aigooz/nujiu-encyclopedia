@@ -216,7 +216,7 @@ def main():
     OUT_REGISTRY.write_text(
         json.dumps(
             {
-                "docx_version": "v1",
+                "docx_version": "v12",
                 "total_sub_lines": sum(x["sub_lines"] for x in all_rows),
                 "generated_at": datetime.now(TZ).isoformat(timespec="seconds"),
                 "videos": all_rows,

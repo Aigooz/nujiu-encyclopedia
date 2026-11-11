@@ -10,22 +10,5 @@
   "死亡一秒从上跳下去",
   "不会吃你们一点东西真香",
   "哎呀"
- ],
- "pages": [
-  {
-   "cid": 35280431,
-   "page": 1,
-   "from": "vupload",
-   "part": "P1",
-   "duration": 8,
-   "vid": "",
-   "weblink": "",
-   "dimension": {
-    "width": 640,
-    "height": 360,
-    "rotate": 0
-   },
-   "ctime": 1522472199
-  }
  ]
 }

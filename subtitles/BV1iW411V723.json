@@ -245,22 +245,5 @@
   "Nothing more that can see it there",
   "I see it",
   "That's your"
- ],
- "pages": [
-  {
-   "cid": 37802275,
-   "page": 1,
-   "from": "vupload",
-   "part": "P1",
-   "duration": 469,
-   "vid": "",
-   "weblink": "",
-   "dimension": {
-    "width": 640,
-    "height": 360,
-    "rotate": 0
-   },
-   "ctime": 1525061446
-  }
  ]
 }

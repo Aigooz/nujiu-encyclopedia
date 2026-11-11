@@ -197,22 +197,5 @@
   "我是怒九",
   "我们下期再见",
   "拜拜"
- ],
- "pages": [
-  {
-   "cid": 97424052,
-   "page": 1,
-   "from": "vupload",
-   "part": "P1",
-   "duration": 426,
-   "vid": "",
-   "weblink": "",
-   "dimension": {
-    "width": 1920,
-    "height": 1080,
-    "rotate": 0
-   },
-   "ctime": 1560652599
-  }
  ]
 }

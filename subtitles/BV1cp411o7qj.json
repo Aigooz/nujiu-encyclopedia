@@ -157,22 +157,5 @@
   "这期就讲到这里了",
   "喜欢的话我会多做这样的推荐系列",
   "那我们下期见拜拜"
- ],
- "pages": [
-  {
-   "cid": 39580901,
-   "page": 1,
-   "from": "vupload",
-   "part": "P1",
-   "duration": 305,
-   "vid": "",
-   "weblink": "",
-   "dimension": {
-    "width": 640,
-    "height": 360,
-    "rotate": 0
-   },
-   "ctime": 1526807905
-  }
  ]
 }

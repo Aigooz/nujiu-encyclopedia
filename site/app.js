@@ -1437,6 +1437,37 @@ function renderProfiles() {
     </div>`).join('');
 }
 
+/**
+ * 微博动态模块。
+ *
+ * 数据来自 m.weibo.cn 公开接口（tools/build_weibo_data.py 生成），随 data.js 发布。
+ * 免登录接口只返回最近一页，因此这里标注为「近期动态」，避免被当成全量历史。
+ */
+function renderWeibo() {
+  const el = document.getElementById('weiboList');
+  if (!el) return;
+  const store = RAW.weibo || {};
+  const accounts = Object.entries(store).filter(([, v]) => v && (v.posts || []).length);
+  if (!accounts.length) {
+    el.innerHTML = '<div class="mini">暂无微博动态</div>';
+    return;
+  }
+  const labels = { nujiu: '怒九（怒九今天爆肝了吗）' };
+  el.innerHTML = accounts.map(([key, account]) => {
+    const posts = [...account.posts].sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    const items = posts.map(p => `
+      <a class="weibo-item" href="${esc(p.url || '#')}" target="_blank" rel="noreferrer">
+        <div class="weibo-head"><span class="pill">${esc((p.date || '').slice(0, 10))}</span>${p.region ? `<span class="mini">${esc(p.region)}</span>` : ''}</div>
+        <div class="weibo-text">${esc((p.text || '').slice(0, 220))}</div>
+        <div class="mini">赞 ${formatChineseNumber(p.likes || 0)} · 评论 ${formatChineseNumber(p.comments || 0)} · 转发 ${formatChineseNumber(p.reposts || 0)}</div>
+      </a>`).join('');
+    return `<div class="weibo-account">
+      <div class="weibo-title">${esc(labels[key] || key)} <span class="mini">${posts.length} 条近期动态</span></div>
+      <div class="weibo-grid">${items}</div>
+    </div>`;
+  }).join('');
+}
+
 function renderMemes() {
   const memes = (RAW.top_memes || []).slice(0, 25);
   if (!memes.length) { renderEmptyChart('chartMemes'); return; }
@@ -1715,6 +1746,7 @@ function renderAll() {
   safe(renderCoverGallery, 'coverGallery');
   safe(renderFollowers, 'followers');
   safe(renderProfiles, 'profiles');
+  safe(renderWeibo, 'weibo');
   safe(renderTable, 'table');
 }
 
@@ -1928,11 +1960,11 @@ function ensureCommentsLoaded() {
   let answered = false;
   let selectedDiff = 'all';
   let selectedCat = 'all';
-  const QUESTIONS_PER_ROUND = 10;
-
   totalQEl.textContent = allQuestions.length;
   const categories = [...new Set(allQuestions.map(q => q.category))];
   if (totalCatEl) totalCatEl.textContent = categories.length;
+  const formatCountEl = document.getElementById('quizFormatCount');
+  if (formatCountEl) formatCountEl.textContent = new Set(allQuestions.map(q => q.format)).size;
   if (categoryWrap) {
     categories.forEach(category => {
       const btn = document.createElement('button');
@@ -1965,12 +1997,11 @@ function ensureCommentsLoaded() {
       (selectedDiff === 'all' || q.difficulty === selectedDiff) &&
       (selectedCat === 'all' || q.category === selectedCat)
     );
-    // Shuffle & limit
+    // Shuffle questions so the pool is completed in a different order each round.
     for (let i = pool.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [pool[i], pool[j]] = [pool[j], pool[i]];
     }
-    pool = pool.slice(0, Math.min(QUESTIONS_PER_ROUND, pool.length));
     if (!pool.length) { alert('该筛选下没有题目'); return; }
     current = 0; score = 0;
     startScreen.style.display = 'none';
@@ -2004,10 +2035,21 @@ function ensureCommentsLoaded() {
     const optsEl = document.getElementById('quizOptions');
     optsEl.innerHTML = '';
     const letters = ['A','B','C','D','E'];
-    q.options.forEach((opt, i) => {
+    const optionOrder = q.options.map((_, i) => i);
+    for (let i = optionOrder.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [optionOrder[i], optionOrder[j]] = [optionOrder[j], optionOrder[i]];
+    }
+    q._displayAnswer = optionOrder.indexOf(q.answer);
+    optionOrder.forEach((optionIndex, i) => {
       const btn = document.createElement('button');
       btn.className = 'quiz-option';
-      btn.innerHTML = `<span class="opt-letter">${letters[i]}</span><span>${opt}</span>`;
+      const letter = document.createElement('span');
+      letter.className = 'opt-letter';
+      letter.textContent = letters[i];
+      const text = document.createElement('span');
+      text.textContent = q.options[optionIndex];
+      btn.append(letter, text);
       btn.addEventListener('click', () => selectAnswer(i, btn));
       optsEl.appendChild(btn);
     });
@@ -2017,14 +2059,14 @@ function ensureCommentsLoaded() {
     if (answered) return;
     answered = true;
     const q = pool[current];
-    const isCorrect = idx === q.answer;
+    const isCorrect = idx === q._displayAnswer;
     if (isCorrect) score += q.points || diffPoints[q.difficulty] || 1;
 
     // Highlight
     const opts = document.querySelectorAll('.quiz-option');
     opts.forEach((opt, i) => {
       opt.disabled = true;
-      if (i === q.answer) opt.classList.add('correct');
+      if (i === q._displayAnswer) opt.classList.add('correct');
       else if (i === idx) opt.classList.add('wrong');
     });
 
@@ -2032,6 +2074,26 @@ function ensureCommentsLoaded() {
     const explainEl = document.getElementById('quizExplain');
     explainEl.style.display = 'flex';
     document.getElementById('quizExplainText').textContent = q.explanation;
+    const evidenceEl = document.getElementById('quizEvidence');
+    evidenceEl.replaceChildren();
+    if (q.evidence) {
+      const heading = document.createElement('b');
+      heading.textContent = '字幕依据';
+      evidenceEl.appendChild(heading);
+      (q.evidence.excerpts || []).forEach(excerpt => {
+        const quote = document.createElement('blockquote');
+        quote.textContent = `第 ${excerpt.line} 行：${excerpt.text}`;
+        evidenceEl.appendChild(quote);
+      });
+      if (/^BV[0-9A-Za-z]+$/.test(q.evidence.bvid || '')) {
+        const link = document.createElement('a');
+        link.href = `https://www.bilibili.com/video/${q.evidence.bvid}`;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = `查看原视频：${q.evidence.title || q.evidence.bvid}`;
+        evidenceEl.appendChild(link);
+      }
+    }
     document.getElementById('quizActions').style.display = 'flex';
     document.getElementById('quizScore').innerHTML = `得分: <b>${score}</b>`;
 

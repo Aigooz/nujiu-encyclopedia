@@ -242,22 +242,5 @@
   "让更多的人知道这个游戏",
   "那我们下期再见",
   "拜拜"
- ],
- "pages": [
-  {
-   "cid": 70350615,
-   "page": 1,
-   "from": "vupload",
-   "part": "P1",
-   "duration": 475,
-   "vid": "",
-   "weblink": "",
-   "dimension": {
-    "width": 1920,
-    "height": 1080,
-    "rotate": 0
-   },
-   "ctime": 1546752598
-  }
  ]
 }

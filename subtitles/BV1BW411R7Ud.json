@@ -367,22 +367,5 @@
   "还有记得点关注哦",
   "好那我们下期再见了",
   "拜拜"
- ],
- "pages": [
-  {
-   "cid": 51298516,
-   "page": 1,
-   "from": "vupload",
-   "part": "P1",
-   "duration": 608,
-   "vid": "",
-   "weblink": "",
-   "dimension": {
-    "width": 1920,
-    "height": 1080,
-    "rotate": 0
-   },
-   "ctime": 1534404799
-  }
  ]
 }

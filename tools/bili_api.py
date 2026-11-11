@@ -143,12 +143,20 @@ def _download_subtitle(url):
 
 def get_subtitle_lines(bvid, cid):
     """返回字幕行文本列表。优先AI中文字幕，其次CC中文。无字幕返回 []。"""
+    # 新版 wbi 接口在部分稿件上会返回 code=0 但 subtitles 为空，旧版 player/v2
+    # 仍能返回 AI 字幕。因此只在 wbi 真正拿到字幕时才采用，否则回退旧接口。
     data = _get('https://api.bilibili.com/x/player/wbi/v2',
                 _signed({'bvid': bvid, 'cid': cid}))
-    if data.get('code') != 0:
-        data = _get('https://api.bilibili.com/x/player/v2',
-                    {'bvid': bvid, 'cid': cid})
     subs = data.get('data', {}).get('subtitle', {}).get('subtitles', [])
+    if data.get('code') != 0 or not subs:
+        fallback = _get('https://api.bilibili.com/x/player/v2',
+                        {'bvid': bvid, 'cid': cid})
+        fb_subs = fallback.get('data', {}).get('subtitle', {}).get('subtitles', [])
+        if fb_subs:
+            data, subs = fallback, fb_subs
+    if not subs:
+        return []
+    subs = [s for s in subs if s.get('subtitle_url')]
     if not subs:
         return []
     subs = sorted(subs, key=lambda s: 0 if s.get('lan', '').startswith('ai') else 1)

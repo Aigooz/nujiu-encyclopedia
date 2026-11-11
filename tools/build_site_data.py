@@ -33,6 +33,14 @@ def main() -> None:
         for key, value in profiles.items()
     }
     account_stats = read_json(ROOT / "tools" / "account_stats.json", {})
+    weibo_file = ROOT / "site" / "data-weibo.js"
+    weibo = {}
+    if weibo_file.exists():
+        try:
+            raw = weibo_file.read_text(encoding="utf-8")
+            weibo = json.loads(raw[raw.index("{"):].rstrip().rstrip(";"))
+        except Exception:
+            weibo = {}
     insight_videos = insights.get("videos") or {}
 
     followers = {}
@@ -188,6 +196,7 @@ def main() -> None:
             "tags": dict(tag_counts.most_common(60)),
         },
         "videos": videos,
+        "weibo": weibo,
     }
 
     out = ROOT / "site" / "data.js"

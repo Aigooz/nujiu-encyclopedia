@@ -147,22 +147,5 @@
   "太过分了吧",
   "居然是愚人节玩笑啊",
   "太过分了啊"
- ],
- "pages": [
-  {
-   "cid": 86239977,
-   "page": 1,
-   "from": "vupload",
-   "part": "P1",
-   "duration": 270,
-   "vid": "",
-   "weblink": "",
-   "dimension": {
-    "width": 1920,
-    "height": 1080,
-    "rotate": 0
-   },
-   "ctime": 1555209646
-  }
  ]
 }

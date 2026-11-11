@@ -1083,37 +1083,5 @@
   "我会找更多的国产像素游戏给大家分享好了",
   "那我们就下期再见喽",
   "拜拜"
- ],
- "pages": [
-  {
-   "cid": 62646104,
-   "page": 1,
-   "from": "vupload",
-   "part": "【1】康——太——啊！",
-   "duration": 2052,
-   "vid": "",
-   "weblink": "",
-   "dimension": {
-    "width": 1920,
-    "height": 1080,
-    "rotate": 0
-   },
-   "ctime": 1541903498
-  },
-  {
-   "cid": 62646100,
-   "page": 2,
-   "from": "vupload",
-   "part": "【2】真相？永远陷入循环",
-   "duration": 798,
-   "vid": "",
-   "weblink": "",
-   "dimension": {
-    "width": 1920,
-    "height": 1080,
-    "rotate": 0
-   },
-   "ctime": 1541903498
-  }
  ]
 }

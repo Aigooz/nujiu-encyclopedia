@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>怒九百科 · 可视化旗舰版</title>
   <meta name="description" content="怒九视频字幕与百科数据可视化，包含投稿节奏、内容结构、规模增长与深度探索图表。">
-  <link rel="stylesheet" href="style.css?v=43">
+  <link rel="stylesheet" href="style.css?v=44">
 </head>
 <body>
   <header class="header">
@@ -24,6 +24,7 @@
         <a href="#explore">探索</a>
         <a href="#danmaku">弹幕考古</a>
         <a href="#rank">榜单</a>
+        <a href="#weibo">微博</a>
         <a href="#quiz">答题</a>
         <a href="#videos">全部视频</a>
       </nav>
@@ -226,6 +227,11 @@
       </div>
     </section>
 
+    <section id="weibo">
+      <div class="sec-head"><h2>微博动态</h2><p>怒九近期发布的公开微博 · 点击卡片打开原文</p><div class="sec-line"></div></div>
+      <div id="weiboList" class="weibo-wrap panel"></div>
+    </section>
+
     <section id="quiz">
       <div class="sec-head"><h2>怒九百科问答</h2><p>你对怒九的了解有多少？来挑战一下！</p><div class="sec-line"></div></div>
       <div class="quiz-wrap panel">
@@ -233,12 +239,12 @@
           <div class="quiz-intro">
             <div class="quiz-icon">🎯</div>
             <h3>怒九知识大挑战</h3>
-            <p>基于百科数据人工精选 · 涵盖数据之最、考古里程碑、系列与内容、合作专题、评论区、梗与弹幕、账号档案与真假判断</p>
+            <p>依据视频字幕整理 · 聚焦游戏机制、剧情线索、创作取舍与视频中的个人观点</p>
             <div class="quiz-stats-row">
               <div class="quiz-stat"><b id="quizTotalQ">—</b><span>道题</span></div>
               <div class="quiz-stat"><b id="quizTotalCat">—</b><span>个分类</span></div>
               <div class="quiz-stat"><b>3</b><span>档难度</span></div>
-              <div class="quiz-stat"><b>2</b><span>种题型</span></div>
+              <div class="quiz-stat"><b id="quizFormatCount">—</b><span>种题型</span></div>
             </div>
             <div class="quiz-diff-select">
               <button class="quiz-diff-btn active" data-diff="all">全部难度</button>
@@ -255,7 +261,7 @@
         <div id="quizGame" class="quiz-screen" style="display:none">
           <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quizProgressFill"></div></div>
           <div class="quiz-meta">
-            <span id="quizQNum">1 / 10</span>
+            <span id="quizQNum">1 / —</span>
             <span class="quiz-badge" id="quizCategory">—</span>
             <span class="quiz-badge diff" id="quizDiff">—</span>
             <span class="quiz-badge format" id="quizFormat">—</span>
@@ -266,7 +272,10 @@
           <div class="quiz-options" id="quizOptions"></div>
           <div class="quiz-explain" id="quizExplain" style="display:none">
             <div class="quiz-explain-icon">💡</div>
-            <div id="quizExplainText"></div>
+            <div class="quiz-explain-content">
+              <div id="quizExplainText"></div>
+              <div id="quizEvidence" class="quiz-evidence"></div>
+            </div>
           </div>
           <div class="quiz-actions" id="quizActions" style="display:none">
             <button class="btn quiz-next-btn" id="quizNextBtn">下一题 →</button>
@@ -328,10 +337,11 @@
       <div style="color:var(--text-muted,#8892b0);font-size:13px;">正在加载百科数据…</div>
       <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
     </div>
-<script defer src="vendor/echarts.min.js?v=43"></script>
-<script defer src="data.js?v=43"></script>
-<script defer src="data-quiz.js?v=43"></script>
-<script defer src="app.js?v=43"></script>
+<script defer src="vendor/echarts.min.js?v=44"></script>
+<script defer src="data.js?v=44"></script>
+<script defer src="data-quiz.js?v=44"></script>
+<script defer src="quiz-refine.js?v=2"></script>
+<script defer src="app.js?v=44"></script>
 </body>
 </html>
 

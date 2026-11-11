@@ -339,22 +339,5 @@
   "谢谢你观看我的视频",
   "我们下期再见吧",
   "拜拜"
- ],
- "pages": [
-  {
-   "cid": 82686412,
-   "page": 1,
-   "from": "vupload",
-   "part": "P1",
-   "duration": 716,
-   "vid": "",
-   "weblink": "",
-   "dimension": {
-    "width": 1920,
-    "height": 1080,
-    "rotate": 0
-   },
-   "ctime": 1553417975
-  }
  ]
 }

@@ -223,6 +223,20 @@ tr.clickable:hover{background:color-mix(in srgb,var(--pink) 7%,transparent)}
 .profile-sign { font-size: 12px; color: var(--muted); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .profile-fans { margin-top: 3px; }
 
+/* 微博动态模块：每个账号一栏，卡片式列出近期公开微博。 */
+.weibo-wrap { display: grid; gap: 18px; }
+.weibo-account { display: grid; gap: 10px; }
+.weibo-title { font-weight: 700; font-size: 15px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.weibo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+.weibo-item { display: grid; gap: 6px; padding: 12px 14px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09); border-radius: 12px; color: var(--text); text-decoration: none; transition: border-color .18s ease, transform .18s ease; }
+.weibo-item:hover { border-color: var(--pink); transform: translateY(-1px); }
+.weibo-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.weibo-text { font-size: 13px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; }
+@media (max-width: 720px) {
+  .weibo-grid { grid-template-columns: 1fr; }
+}
+
+
 /* 封面画廊 */
 .gallery-filter { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; border-radius: var(--radius); }
 .gallery-filter select { min-width: 130px; }
@@ -321,7 +335,11 @@ tr.clickable:hover{background:color-mix(in srgb,var(--pink) 7%,transparent)}
 .quiz-explain{display:flex;gap:12px;padding:16px;border-radius:12px;background:rgba(124,92,255,.06);border:1px solid rgba(124,92,255,.15);margin-bottom:16px;animation:quizSlideIn .3s ease}
 @keyframes quizSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .quiz-explain-icon{font-size:20px;flex-shrink:0}
-.quiz-explain div:last-child{font-size:14px;color:var(--text-secondary,var(--text));line-height:1.6}
+.quiz-explain-content{min-width:0;font-size:14px;color:var(--text-secondary,var(--text));line-height:1.6}
+.quiz-evidence{display:grid;gap:5px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:13px}
+.quiz-evidence b{color:var(--text)}
+.quiz-evidence blockquote{margin:0;padding-left:10px;border-left:2px solid var(--primary);color:var(--muted)}
+.quiz-evidence a{width:fit-content;color:var(--primary);text-decoration:underline;text-underline-offset:2px}
 
 /* Actions */
 .quiz-actions{display:flex;justify-content:flex-end}

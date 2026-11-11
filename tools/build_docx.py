@@ -8,6 +8,7 @@ import datetime
 import json
 import re
 import statistics
+import subprocess
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -120,12 +121,31 @@ def add_image(doc, filename, caption="", width=6.4):
 
 
 def parse_quiz():
-    path = ROOT / "site" / "data-quiz.js"
-    if not path.exists():
+    base_path = ROOT / "site" / "data-quiz.js"
+    refine_path = ROOT / "site" / "quiz-refine.js"
+    if not base_path.exists():
         return []
-    raw = path.read_text(encoding="utf-8")
-    body = raw.split("const QUIZ_DATA =", 1)[-1].rsplit("];", 1)[0] + "]"
-    return json.loads(body)
+    script = r"""
+const fs = require('fs');
+const vm = require('vm');
+const context = {};
+vm.createContext(context);
+for (const path of ['site/data-quiz.js', 'site/quiz-refine.js']) {
+  if (fs.existsSync(path)) {
+    vm.runInContext(fs.readFileSync(path, 'utf8') + '\nglobalThis.__quiz = QUIZ_DATA;', context, { filename: path });
+  }
+}
+process.stdout.write(JSON.stringify(context.__quiz || []));
+"""
+    result = subprocess.run(
+        ["node", "-e", script],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    return json.loads(result.stdout)
 
 
 def stat_of(video, key):
@@ -1006,7 +1026,8 @@ def build():
 
     heading(doc, "第十章  怒九熟悉度测试", 1)
     quiz_categories = sorted(set(item["category"] for item in quiz))
-    para(doc, f"本章收录 {len(quiz)} 道自动生成题目，覆盖 {len(quiz_categories)} 个分类和简单 / 中等 / 困难三档。题目来自 registry、meta、标签、弹幕、评论和账号档案，可用来检验读者对数据细节的掌握。")
+    quiz_sources = {item.get("evidence", {}).get("bvid") for item in quiz if item.get("evidence", {}).get("bvid")}
+    para(doc, f"本章收录 {len(quiz)} 道题目，覆盖 {len(quiz_categories)} 个分类、{len(quiz_sources)} 部视频及中等 / 困难两档。题干、选项与解析依据对应视频字幕编写；每题标出正确选项。")
     quiz_by_category = defaultdict(list)
     for item in quiz:
         quiz_by_category[item["category"]].append(item)
@@ -1020,8 +1041,12 @@ def build():
         diff_map = {"easy": "简单", "medium": "中等", "hard": "困难"}
         table_rows = []
         for idx, item in enumerate(rows, 1):
-            table_rows.append([idx, diff_map.get(item["difficulty"], item["difficulty"]), item["q"], item["options"][item["answer"]], item.get("explanation", "")])
-        add_table(doc, ["#", "难度", "问题", "正确答案", "解析"], table_rows, widths=[0.35, 0.6, 2.25, 1.4, 1.7])
+            options = "\n".join(
+                f"{chr(65 + option_index)}. {option}{'（正确）' if option_index == item['answer'] else ''}"
+                for option_index, option in enumerate(item["options"])
+            )
+            table_rows.append([idx, diff_map.get(item["difficulty"], item["difficulty"]), item["q"], options, item.get("explanation", "")])
+        add_table(doc, ["#", "难度", "问题", "选项", "解析"], table_rows, widths=[0.3, 0.52, 1.75, 2.75, 1.65])
 
     doc.add_page_break()
     heading(doc, "第十一章  小号视频专题（怒九摸鱼馆）", 1)
