@@ -1456,16 +1456,65 @@ function renderWeibo() {
   el.innerHTML = accounts.map(([key, account]) => {
     const posts = [...account.posts].sort((a, b) => String(b.date).localeCompare(String(a.date)));
     const items = posts.map(p => `
-      <a class="weibo-item" href="${esc(p.url || '#')}" target="_blank" rel="noreferrer">
+      <div class="weibo-item" data-bvid="weibo:${esc(p.id)}" role="button" tabindex="0">
         <div class="weibo-head"><span class="pill">${esc((p.date || '').slice(0, 10))}</span>${p.region ? `<span class="mini">${esc(p.region)}</span>` : ''}</div>
         <div class="weibo-text">${esc((p.text || '').slice(0, 220))}</div>
-        <div class="mini">赞 ${formatChineseNumber(p.likes || 0)} · 评论 ${formatChineseNumber(p.comments || 0)} · 转发 ${formatChineseNumber(p.reposts || 0)}</div>
-      </a>`).join('');
+        <div class="mini">赞 ${formatChineseNumber(p.likes || 0)} · 转发 ${formatChineseNumber(p.reposts || 0)} · 已存评论 ${(p.comments_data || []).reduce((n, c) => n + 1 + (c.replies || []).length, 0)} 条</div>
+      </div>`).join('');
     return `<div class="weibo-account">
-      <div class="weibo-title">${esc(labels[key] || key)} <span class="mini">${posts.length} 条近期动态</span></div>
+      <div class="weibo-title">${esc(labels[key] || account.name || key)} <span class="mini">本地归档 ${posts.length} 条 · 点击查看正文与评论</span></div>
       <div class="weibo-grid">${items}</div>
     </div>`;
   }).join('');
+  // 站点内直接展开评论，不跳转外部站点。
+  el.querySelectorAll('.weibo-item').forEach(node => {
+    const open = () => openWeiboModal(node.getAttribute('data-bvid').replace('weibo:', ''));
+    node.addEventListener('click', open);
+    node.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); }
+    });
+  });
+}
+
+/**
+ * 微博详情弹窗：正文、配图与评论区全部在站点内渲染。
+ *
+ * 数据来自本地归档（data-weibo.js），因此微博过了"仅半年可见"期限后
+ * 依然可以在站点内查看，不需要跳转到微博站点或 App。
+ */
+function openWeiboModal(postId) {
+  let post = null;
+  for (const account of Object.values(RAW.weibo || {})) {
+    post = (account.posts || []).find(p => String(p.id) === String(postId));
+    if (post) break;
+  }
+  if (!post) return;
+  const modal = document.getElementById('videoModal');
+  modal.dataset.bvid = 'weibo:' + postId;
+  const body = document.getElementById('modalBody');
+  const pics = (post.pics || []).map(u => `<img class="weibo-pic" src="${esc(u.replace('http://', 'https://'))}" alt="" referrerpolicy="no-referrer" loading="lazy">`).join('');
+  const comments = (post.comments_data || []).map(c => `
+    <div class="comment">
+      <div class="comment-head">
+        <b>${esc(c.user)}</b>${c.is_author ? '<span class="pill">博主</span>' : ''}
+        <span class="mini">${esc(c.date || '')}${c.region ? ' · ' + esc(c.region) : ''}</span>
+      </div>
+      <div class="comment-msg">${esc(c.text)}</div>
+      <div class="mini">👍 ${numberFormat(c.likes || 0)}</div>
+      ${(c.replies || []).length ? `<div class="weibo-replies">${(c.replies || []).map(r => `
+        <div class="weibo-reply">↳ <b>${r.is_author ? '[博主] ' : ''}${esc(r.user)}</b>：${esc(r.text)} <span class="mini">👍 ${numberFormat(r.likes || 0)}</span></div>`).join('')}</div>` : ''}
+    </div>`).join('') || '<div class="mini">暂未收录这条微博的评论</div>';
+  const commentTotal = (post.comments_data || []).reduce((n, c) => n + 1 + (c.replies || []).length, 0);
+  body.innerHTML = `
+    <div class="modal-hero-text"><h3>微博详情</h3>
+      <div class="mini">${esc(post.date || '')}${post.region ? ' · ' + esc(post.region) : ''}</div>
+      <div class="mini">👍 ${numberFormat(post.likes || 0)} · 转发 ${numberFormat(post.reposts || 0)} · 本地已存评论 ${commentTotal} 条</div>
+    </div>
+    <div class="modal-block"><h4>正文</h4><div class="comment-msg">${esc(post.text || '').replace(/\n/g, '<br>')}</div></div>
+    ${pics ? `<div class="modal-block"><h4>配图</h4><div class="weibo-pics">${pics}</div></div>` : ''}
+    <div class="modal-block"><h4>评论</h4>${comments}</div>`;
+  modal.hidden = false;
+  document.body.style.overflow = 'hidden';
 }
 
 function renderMemes() {
