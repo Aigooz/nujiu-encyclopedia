@@ -1440,9 +1440,25 @@ function renderProfiles() {
 /**
  * 微博动态模块。
  *
- * 数据来自 m.weibo.cn 公开接口（tools/build_weibo_data.py 生成），随 data.js 发布。
- * 免登录接口只返回最近一页，因此这里标注为「近期动态」，避免被当成全量历史。
+ * 数据来自 m.weibo.cn 公开接口（tools/build_weibo_data.py 生成），随
+ * data.js 一同发布。免登录接口只返回最近一页，因此这里说明抓取时间，
+ * 避免读者误以为它是全量历史。
  */
+/**
+ * 微博图片地址。
+ *
+ * 微博图片 CDN（sinaimg.cn）会校验 Referer，只接受来自微博域名的请求，
+ * 站点自身直接引用会得到 403。这里统一改写成图片代理地址（i0.wp.com 是
+ * 公开的反向代理，会以自身身份回源），保证网页端头像与配图能显示。
+ * App 端则直接带 Referer 请求，不走代理。
+ */
+function weiboImage(url) {
+  if (!url) return '';
+  const base = String(url).replace(/^http:/, 'https:').split('?')[0];
+  if (!/sinaimg\.cn\//.test(base)) return base;
+  return 'https://i0.wp.com/' + base.replace(/^https?:\/\//, '');
+}
+
 function renderWeibo() {
   const el = document.getElementById('weiboList');
   if (!el) return;
@@ -1457,12 +1473,22 @@ function renderWeibo() {
     const posts = [...account.posts].sort((a, b) => String(b.date).localeCompare(String(a.date)));
     const items = posts.map(p => `
       <div class="weibo-item" data-bvid="weibo:${esc(p.id)}" role="button" tabindex="0">
-        <div class="weibo-head"><span class="pill">${esc((p.date || '').slice(0, 10))}</span>${p.region ? `<span class="mini">${esc(p.region)}</span>` : ''}</div>
+        <div class="weibo-head">
+          ${account.avatar ? `<img class="weibo-avatar" src="${esc(weiboImage(account.avatar))}" alt="" referrerpolicy="no-referrer" loading="lazy">` : ''}
+          <div class="weibo-who">
+            <b>${esc(account.name || key)}</b>
+            <span class="mini">${esc(p.date || '')}${p.region ? ' · ' + esc(p.region) : ''}</span>
+          </div>
+        </div>
         <div class="weibo-text">${esc((p.text || '').slice(0, 220))}</div>
         <div class="mini">赞 ${formatChineseNumber(p.likes || 0)} · 转发 ${formatChineseNumber(p.reposts || 0)} · 已存评论 ${(p.comments_data || []).reduce((n, c) => n + 1 + (c.replies || []).length, 0)} 条</div>
       </div>`).join('');
     return `<div class="weibo-account">
-      <div class="weibo-title">${esc(labels[key] || account.name || key)} <span class="mini">本地归档 ${posts.length} 条 · 点击查看正文与评论</span></div>
+      <div class="weibo-title">
+        ${account.avatar ? `<img class="weibo-head-avatar" src="${esc(weiboImage(account.avatar))}" alt="" referrerpolicy="no-referrer" loading="lazy">` : ''}
+        <span>${esc(labels[key] || account.name || key)}</span>
+        <span class="mini">本地归档 ${posts.length} 条 · 点击查看正文与评论</span>
+      </div>
       <div class="weibo-grid">${items}</div>
     </div>`;
   }).join('');
@@ -1484,35 +1510,44 @@ function renderWeibo() {
  */
 function openWeiboModal(postId) {
   let post = null;
+  let owner = null;
   for (const account of Object.values(RAW.weibo || {})) {
     post = (account.posts || []).find(p => String(p.id) === String(postId));
-    if (post) break;
+    if (post) { owner = account; break; }
   }
   if (!post) return;
   const modal = document.getElementById('videoModal');
   modal.dataset.bvid = 'weibo:' + postId;
   const body = document.getElementById('modalBody');
-  const pics = (post.pics || []).map(u => `<img class="weibo-pic" src="${esc(u.replace('http://', 'https://'))}" alt="" referrerpolicy="no-referrer" loading="lazy">`).join('');
+  const pics = (post.pics || []).map(u => `<img class="weibo-pic" src="${esc(weiboImage(u))}" alt="" referrerpolicy="no-referrer" loading="lazy">`).join('');
   const comments = (post.comments_data || []).map(c => `
     <div class="comment">
-      <div class="comment-head">
-        <b>${esc(c.user)}</b>${c.is_author ? '<span class="pill">博主</span>' : ''}
-        <span class="mini">${esc(c.date || '')}${c.region ? ' · ' + esc(c.region) : ''}</span>
-      </div>
-      <div class="comment-msg">${esc(c.text)}</div>
-      <div class="mini">👍 ${numberFormat(c.likes || 0)}</div>
-      ${(c.replies || []).length ? `<div class="weibo-replies">${(c.replies || []).map(r => `
+      ${c.avatar ? `<img class="weibo-comment-avatar" src="${esc(weiboImage(c.avatar))}" alt="" referrerpolicy="no-referrer" loading="lazy">` : ''}
+      <div class="weibo-comment-body">
+        <div class="comment-head">
+          <b>${esc(c.user)}</b>${c.is_author ? '<span class="pill">博主</span>' : ''}
+          <span class="mini">${esc(c.date || '')}${c.region ? ' · ' + esc(c.region) : ''}</span>
+        </div>
+        <div class="comment-msg">${esc(c.text)}</div>
+        <div class="mini">👍 ${numberFormat(c.likes || 0)}</div>
+        ${(c.replies || []).length ? `<div class="weibo-replies">${(c.replies || []).map(r => `
         <div class="weibo-reply">↳ <b>${r.is_author ? '[博主] ' : ''}${esc(r.user)}</b>：${esc(r.text)} <span class="mini">👍 ${numberFormat(r.likes || 0)}</span></div>`).join('')}</div>` : ''}
+      </div>
     </div>`).join('') || '<div class="mini">暂未收录这条微博的评论</div>';
   const commentTotal = (post.comments_data || []).reduce((n, c) => n + 1 + (c.replies || []).length, 0);
   body.innerHTML = `
-    <div class="modal-hero-text"><h3>微博详情</h3>
-      <div class="mini">${esc(post.date || '')}${post.region ? ' · ' + esc(post.region) : ''}</div>
-      <div class="mini">👍 ${numberFormat(post.likes || 0)} · 转发 ${numberFormat(post.reposts || 0)} · 本地已存评论 ${commentTotal} 条</div>
+    <div class="weibo-detail-head">
+      ${owner && owner.avatar ? `<img class="weibo-head-avatar" src="${esc(weiboImage(owner.avatar))}" alt="" referrerpolicy="no-referrer">` : ''}
+      <div>
+        <b>${esc(owner ? (owner.name || '') : '')}</b>
+        <div class="mini">${esc(post.date || '')}${post.region ? ' · ' + esc(post.region) : ''}</div>
+      </div>
     </div>
-    <div class="modal-block"><h4>正文</h4><div class="comment-msg">${esc(post.text || '').replace(/\n/g, '<br>')}</div></div>
-    ${pics ? `<div class="modal-block"><h4>配图</h4><div class="weibo-pics">${pics}</div></div>` : ''}
-    <div class="modal-block"><h4>评论</h4>${comments}</div>`;
+    <div class="comment-msg weibo-detail-text">${esc(post.text || '').replace(/\n/g, '<br>')}</div>
+    ${pics ? `<div class="weibo-pics">${pics}</div>` : ''}
+    <div class="weibo-detail-bar"><span>转发 ${numberFormat(post.reposts || 0)}</span><span>评论 ${commentTotal}</span><span>赞 ${numberFormat(post.likes || 0)}</span></div>
+    <h3 class="modal-sub">评论</h3>
+    <div class="comment-list">${comments}</div>`;
   modal.hidden = false;
   document.body.style.overflow = 'hidden';
 }

@@ -65,6 +65,7 @@ def main() -> None:
             for comment in item.get("comments_data") or []:
                 comments.append({
                     "user": comment.get("user") or "",
+                    "avatar": comment.get("avatar") or "",
                     "date": comment.get("date") or "",
                     "text": clean_text(comment.get("text") or ""),
                     "likes": comment.get("likes") or 0,
@@ -94,6 +95,7 @@ def main() -> None:
         payload[key] = {
             "uid": account.get("uid"),
             "name": account.get("name") or key,
+            "avatar": account.get("avatar") or "",
             "fetched_at": account.get("last_sync") or archive.get("updated_at") or "",
             "complete": False,
             "count": len(posts),

@@ -61,6 +61,7 @@ def main() -> None:
         })
         target["uid"] = data.get("uid") or target.get("uid") or ""
         target["name"] = data.get("name") or target.get("name") or ""
+        target["avatar"] = data.get("avatar") or target.get("avatar") or ""
         target["last_sync"] = data.get("fetched_at") or ""
         by_id = {str(p.get("id")): p for p in target.get("posts") or []}
         added = updated = 0

@@ -40,6 +40,12 @@ MOBILE_UA = ("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit
 ACCOUNTS = {
     "nujiu": {"uid": "5584883348", "name": "怒九今天爆肝了吗"},
 }
+# 作者头像：微博图片 CDN 需要 Referer 才能加载，这里只存无水印基础地址，
+# 由客户端在请求时附带 Referer。
+AVATARS = {
+    "warma": "https://tvax2.sinaimg.cn/crop.0.0.600.600.180/6a3e9e9ely8hobt1otu99j20go0gowgh.jpg",
+    "nujiu": "https://tvax2.sinaimg.cn/crop.0.0.996.996.180/0065XBhGly8ggxg9cwb13j30ro0ro40q.jpg",
+}
 
 IMAGE_TAG = re.compile(r'<img[^>]*alt="([^"]*)"[^>]*>', re.I)
 LINK_TAG = re.compile(r'<a[^>]*>(.*?)</a>', re.I | re.S)
@@ -303,6 +309,7 @@ def main() -> None:
         payload[key] = {
             "uid": meta["uid"],
             "name": meta["name"],
+            "avatar": AVATARS.get(key, ""),
             "fetched_at": datetime.now().astimezone().isoformat(timespec="seconds"),
             "complete": bool(cookie),
             "count": len(posts),
